@@ -1,0 +1,11 @@
+{
+  "tables" : [ {
+    "jsonDocumentType" : "Testing",
+    "fileNames" : [ "src/test/resources/x.csv" ],
+    "dataFields" : [ {
+      "dbFieldName" : "nStockPrice",
+      "jsonFieldName" : "Price"
+    } ],
+    "nestType" : "PARENT"
+  } ]
+}

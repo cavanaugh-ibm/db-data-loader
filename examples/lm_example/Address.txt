@@ -1,0 +1,9 @@
+_id	,	AddressRowidObject	,	AddressLastModifiedTimestamp	,	AddressTypeCode	,	AddressPreferenceTypeCode	,	AddressLine1	,	AddressLine2	,	City	,	State	,	PostalCode	,	PostalExtensionCode	,	SoftDeleteIndicator	,	SoftDeleteTimestamp
+111	,	5555	,	2010-09-30T01:33+00:00	,	RES	,		,	4893 Maple 	,		,	Pasadena	,	CA	,	99272	,	3883	,		,	
+111	,	5556	,	2010-09-30T01:33+00:00	,	MAIL	,		,	4893 Maple 	,		,	San Diego	,	CA	,	99383	,	4664	,		,	
+222	,	5557	,	2010-10-31T01:33+00:00	,	RES	,		,	363 Boothe Ave	,	Apt. 5	,	Boston	,	MA	,	02992	,	5353	,		,	
+222	,	5558	,	2010-10-31T01:33+00:00	,	MAIL	,		,	P.O. Box 33	,		,	Boston	,	MA	,	02882	,	5355	,		,	
+333	,	5559	,	2014-09-30T01:33+00:00	,	RES	,		,	21 Allen Ave.	,		,	Cleveland	,	OH	,	44201	,	5353	,		,	
+444	,	5560	,	2013-09-30T01:33+00:00	,	RES	,		,	44 Bushmills	,		,	Pompton Lakes	,	NJ	,	04554	,	3222	,		,	
+555	,	5561	,	2011-09-30T01:33+00:00	,	RES	,		,	101 Madison Ave.	,	Apt 2344	,	New York	,	NY	,	01183	,	6433	,		,	
+555	,	5562	,	2010-09-30T01:33+00:00	,	MAIL	,		,	131 Fourth St.	,		,	New Youk	,	NY	,	01101	,	4333	,		,	

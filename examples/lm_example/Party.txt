@@ -1,0 +1,6 @@
+_id	,	DocumentType	,	SchemaVersion	,	EntityTimestamp	,	SourceSystemPartyId	,	SourceSystemId	,	FirstName	,	MiddleName	,	LastName	,	GenerationCode	,	GenderCode	,	MaritalStatusCode	,	HighestEducationCode	,	FullName	,	BirthDate	,	PartyTypeCode	,	LastFourSsn	,	DriversLicenseNumber	,	DriversLicenseState
+111	,	Person	,	1	,	2010-09-30T01:33+00:00	,	219907744	,	V2K	,	Jerry	,	A	,	Garcia	,		,	M	,	S	,	8	,	Jerry A Garcia	,	1940-09-30	,	C	,	5546	,	CA477499	,	CA
+222	,	Person	,	1	,	2014-09-30T01:33+00:00	,	324664744	,	V2K	,	Mary	,	Ann	,	Angelo	,		,	F	,	M	,	12	,	Mary Ann Angelo	,	1940-09-30	,	C	,	2233	,	MA4239646	,	MA
+333	,	Person	,	1	,	2013-09-30T01:33+00:00	,	593797235	,	V2K	,	Clark	,	 	,	Gable	,		,	M	,	M	,	12	,	Clark Gable	,	1940-09-30	,	C	,	4466	,	OH5238787	,	OH
+444	,	Person	,	1	,	2011-09-30T01:33+00:00	,	95580238532	,	V2K	,	Joseph	,	M	,	Moore	,		,	M	,	M	,	12	,	Joseph M Moore	,	1940-09-30	,	C	,	7612	,	NJ23578352352	,	NJ
+555	,	Person	,	1	,	2010-09-30T01:33+00:00	,	324664744	,	V2K	,	Theodore	,	L	,	Gatsby	,		,	M	,	S	,	M	,	Theodore L Gatsby	,	1940-09-30	,	C	,	7545	,	NY47379723	,	NY

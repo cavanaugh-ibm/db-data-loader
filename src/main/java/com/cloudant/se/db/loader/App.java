@@ -1,0 +1,181 @@
+package com.cloudant.se.db.loader;
+
+import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
+import com.cloudant.client.api.CloudantClient;
+import com.cloudant.se.db.loader.config.AppConfig;
+import com.cloudant.se.db.loader.config.DataTable;
+import com.cloudant.se.db.loader.read.CsvDataTableReader;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+
+/**
+ * Things to consider in this - Should we use a pool for objects to speed up?
+ * 
+ * @author Cavanaugh
+ *
+ */
+public class App {
+	public enum TransformLanguage {
+		GROOVY, JAVASCRIPT
+	};
+
+	private static final Logger	log				= Logger.getLogger(App.class);
+
+	protected AppOptions		options			= null;
+	protected AppConfig			config			= null;
+
+	protected ExecutorService	readerExecutor	= null;
+	protected ExecutorService	writerExecutor	= null;
+
+	public App() {
+	}
+
+	public int config(String[] args) {
+		options = new AppOptions();
+		JCommander jCommander = new JCommander();
+		jCommander.setProgramName("Cloudandt \"Relational Database\" Import Utility");
+		jCommander.addObject(options);
+
+		//
+		// Try to parse the options we were given
+		try {
+			jCommander.parse(args);
+		} catch (ParameterException e) {
+			showUsage(jCommander);
+			return 1;
+		}
+
+		//
+		// Show the help if they asked for it
+		if (options.help) {
+			showUsage(jCommander);
+			return 0;
+		}
+
+		//
+		// Read the config they gave us
+		try {
+			//
+			// Read the configuration from our file and let it validate itself
+			ObjectMapper mapper = new ObjectMapper();
+			File configFile = new File(options.configFileName);
+			config = mapper.readValue(configFile, AppConfig.class);
+			config.defaultDirectory = configFile.getParentFile();
+			config.validate();
+
+			//
+			// Print out a sample of what the output JSON documents will look like will look like
+			// TODO
+			// config.printSample();
+		} catch (IllegalArgumentException e) {
+			System.err.println("Configuration error detected - " + e.getMessage());
+			config = null;
+			return -2;
+		} catch (UnrecognizedPropertyException e) {
+			System.err.println("Configuration error detected - unrecognized parameter - typo? - [" + e.getUnrecognizedPropertyName() + "][" + e.getLocation() + "]");
+			config = null;
+			return -3;
+		} catch (Exception e) {
+			System.err.println("Unexpected exception - see log for details - " + e.getMessage());
+			log.error(e.getMessage(), e);
+			return -1;
+		}
+		//
+		// Setup our executor service
+		readerExecutor = Executors.newFixedThreadPool(config.tables.size());
+		writerExecutor = Executors.newFixedThreadPool(config.tables.size() * 4);
+
+		return 0;
+	}
+
+	private void showUsage(JCommander jCommander) {
+		jCommander.usage();
+		if (options.unrecognizedOptions != null && options.debug) {
+			logError("Unrecognized Options: " + options.unrecognizedOptions.toString());
+		}
+	}
+
+	public static void main(String[] args)
+	{
+		App app = new App();
+		int configReturnCode = app.config(args);
+		switch (configReturnCode) {
+			case 0:
+				// config worked, user accepted design
+				System.exit(app.start());
+				break;
+			default:
+				// config did NOT work, error out
+				System.exit(configReturnCode);
+				break;
+		}
+	}
+
+	private int start() {
+		log.info("Configuration complete, starting up");
+		try {
+			config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPass);
+			config.database = config.client.database(config.cloudantDatabase, false);
+			log.info(" --- Connected to Cloudant --- ");
+			log.info("Available databases - " + config.client.getAllDbs());
+			log.info("Database shards - " + config.database.getShards());
+		} catch (Exception e) {
+			log.fatal("Unable to connect to the database", e);
+			return -4;
+		}
+
+		try {
+			for (DataTable table : config.tables) {
+				if (table.useDatabase) {
+					log.fatal("Database source is not supported yet");
+					return 3;
+				} else {
+					switch (table.fileType) {
+						case CSV:
+							log.info("Submitting CSV file reader for " + table.fileNames);
+							readerExecutor.submit(new CsvDataTableReader(config, table, writerExecutor));
+							break;
+						case JSON:
+						case XML:
+						default:
+							log.fatal("Files of type " + table.fileType + " are not supported yet");
+							return 3;
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.fatal("Unexpected exception", e);
+			return -1;
+		}
+
+		try {
+			//
+			// Be careful with the order you shutdown the pools because you may shutdown the writer pool before the reader has finished adding items in
+			log.info("All readers have been scheduled, waiting for completion");
+			readerExecutor.shutdown();
+			readerExecutor.awaitTermination(1, TimeUnit.DAYS);
+			log.info("All readers have completed");
+
+			log.info("Waiting for writers to complete");
+			writerExecutor.shutdown();
+			writerExecutor.awaitTermination(1, TimeUnit.DAYS);
+			log.info("All writers have completed");
+		} catch (InterruptedException e) {
+		}
+
+		log.info("App complete, shutting down");
+		return 0;
+	}
+
+	private void logError(String s) {
+		log.error(s);
+	}
+}

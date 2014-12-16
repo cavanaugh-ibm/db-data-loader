@@ -1,0 +1,7 @@
+nId,sFirstName,sLastName,nAge,sSomethingToIgnore,sSomethingToInclude
+1,"FirstNameValue1","LastNameValue1",1,"Ignore field 1","Include field 1"
+2,"FirstNameValue2","LastNameValue2",2,"Ignore field 2","Include field 2"
+3,"FirstNameValue3","LastNameValue3",3,"Ignore field 3","Include field 3"
+4,"FirstNameValue4","LastNameValue4",4,"Ignore field 4","Include field 4"
+5,"FirstNameValue5","LastNameValue5",5,"Ignore field 5","Include field 5"
+
