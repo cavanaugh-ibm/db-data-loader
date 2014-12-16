@@ -23,14 +23,14 @@ public class CsvDataTableReader extends ADataTableReader {
 	public Integer call() throws Exception {
 		for (String fName : table.fileNames) {
 			log.info("CSV reader starting file " + fName);
-			File csvFile = null;
-			if (fName.startsWith(File.pathSeparator)) {
-				csvFile = new File(fName);
-			} else {
-				csvFile = new File(config.defaultDirectory.getAbsolutePath() + File.separator + fName);
-			}
-
 			try {
+				File csvFile = null;
+				if (fName.startsWith(File.pathSeparator)) {
+					csvFile = new File(fName);
+				} else {
+					csvFile = new File(config.defaultDirectory.getAbsolutePath() + File.separator + fName);
+				}
+
 				if (csvFile.canRead()) {
 					CSVReader reader = null;
 					try {
@@ -66,7 +66,7 @@ public class CsvDataTableReader extends ADataTableReader {
 					return -1;
 				}
 			} catch (Throwable e) {
-				e.printStackTrace();
+				log.error("Error working with " + fName, e);
 			}
 		}
 

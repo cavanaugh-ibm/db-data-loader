@@ -68,7 +68,7 @@ public class App {
 			ObjectMapper mapper = new ObjectMapper();
 			File configFile = new File(options.configFileName);
 			config = mapper.readValue(configFile, AppConfig.class);
-			config.defaultDirectory = configFile.getParentFile();
+			config.defaultDirectory = configFile.getParentFile() != null ? configFile.getParentFile() : new File(".");
 			config.validate();
 
 			//
@@ -125,8 +125,8 @@ public class App {
 			config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPass);
 			config.database = config.client.database(config.cloudantDatabase, false);
 			log.info(" --- Connected to Cloudant --- ");
-			log.info("Available databases - " + config.client.getAllDbs());
-			log.info("Database shards - " + config.database.getShards());
+			log.debug("Available databases - " + config.client.getAllDbs());
+			log.debug("Database shards - " + config.database.getShards().size());
 		} catch (Exception e) {
 			log.fatal("Unable to connect to the database", e);
 			return -4;

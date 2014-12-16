@@ -67,7 +67,7 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 
 	private boolean insert(Map<String, Object> map) {
 		try {
-			log.info("Calling remote save " + map.get("_id"));
+			log.debug("Calling remote save " + map.get("_id"));
 			config.database.save(map);
 			return true;
 		} catch (DocumentConflictException e) {
@@ -77,7 +77,7 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 
 	private boolean update(Map<String, Object> map) {
 		try {
-			log.info("Calling remote update " + map.get("_id"));
+			log.debug("Calling remote update " + map.get("_id"));
 			config.database.update(map);
 			return true;
 		} catch (DocumentConflictException e) {
