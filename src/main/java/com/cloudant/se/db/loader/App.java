@@ -13,6 +13,7 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.read.CsvDataTableReader;
+import com.cloudant.se.db.loader.read.SqlDataTableReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 
@@ -125,8 +126,8 @@ public class App {
 			config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPass);
 			config.database = config.client.database(config.cloudantDatabase, false);
 			log.info(" --- Connected to Cloudant --- ");
-			log.debug("Available databases - " + config.client.getAllDbs());
-			log.debug("Database shards - " + config.database.getShards().size());
+			// log.debug("Available databases - " + config.client.getAllDbs());
+			// log.debug("Database shards - " + config.database.getShards().size());
 		} catch (Exception e) {
 			log.fatal("Unable to connect to the database", e);
 			return -4;
@@ -135,8 +136,8 @@ public class App {
 		try {
 			for (DataTable table : config.tables) {
 				if (table.useDatabase) {
-					log.fatal("Database source is not supported yet");
-					return 3;
+					log.info("Submitting SQL DB reader for " + table.sqlQuery);
+					readerExecutor.submit(new SqlDataTableReader(config, table, writerExecutor));
 				} else {
 					switch (table.fileType) {
 						case CSV:

@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
@@ -67,7 +68,7 @@ public abstract class ADataTableReader implements Callable<Integer> {
 			// Extra field, nothing to do to it, just keep it
 			DataTableField field = new DataTableField();
 			field.dbFieldName = fieldName;
-			field.jsonFieldName = fieldName;
+			field.jsonFieldName = WordUtils.capitalizeFully(fieldName, new char[] { '_' }).replaceAll("_", "");
 
 			currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
 		}

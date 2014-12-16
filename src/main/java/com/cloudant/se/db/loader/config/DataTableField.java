@@ -1,6 +1,7 @@
 package com.cloudant.se.db.loader.config;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.ektorp.util.Assert;
 
 import com.cloudant.se.db.loader.App.TransformLanguage;
@@ -25,7 +26,7 @@ public class DataTableField {
 		Assert.hasText(dbFieldName);
 
 		if (StringUtils.isBlank(jsonFieldName)) {
-			jsonFieldName = dbFieldName;
+			jsonFieldName = WordUtils.capitalizeFully(dbFieldName, new char[] { '_' }).replaceAll("_", "");
 		}
 	}
 }
