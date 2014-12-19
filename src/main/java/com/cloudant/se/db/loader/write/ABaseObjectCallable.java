@@ -58,6 +58,9 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 		int rc = 0;
 		try {
 			rc = handle();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			System.exit(0);
 		} catch (Exception e) {
 			log.error("Error while saving record");
 		}
@@ -213,6 +216,7 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 	protected boolean upsert(String id, Map<String, Object> map) throws Exception {
 		LockManager.acquire(id);
 
+		// log.error("Running in thread - " + Thread.currentThread().getName());
 		try {
 			if (insert(map)) {
 				//

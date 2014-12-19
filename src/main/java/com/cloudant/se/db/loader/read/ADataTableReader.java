@@ -104,9 +104,9 @@ public abstract class ADataTableReader implements Callable<Integer> {
 		// Add all our data into the callable
 		callable.addFields(currentRow);
 		executor.submit(callable);
-	}
 
-	protected void reset() {
+		//
+		// Reset our state
 		currentRow.clear();
 	}
 }

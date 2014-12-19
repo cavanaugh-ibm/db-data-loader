@@ -45,10 +45,6 @@ public class CsvDataTableReader extends ADataTableReader {
 						// Loop through the remaining lines and give them to the record handler from the super class
 						while ((nextLine = reader.readNext()) != null) {
 							//
-							// Reset our state for the current row
-							reset();
-
-							//
 							// If the parsed record is of the correct length (successful parsing)
 							if (header.length == nextLine.length) {
 								for (int i = 0; i < header.length; i++) {

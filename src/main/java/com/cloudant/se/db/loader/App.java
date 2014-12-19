@@ -1,8 +1,11 @@
 package com.cloudant.se.db.loader;
 
 import java.io.File;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
@@ -92,7 +95,10 @@ public class App {
 		//
 		// Setup our executor service
 		readerExecutor = Executors.newFixedThreadPool(config.tables.size());
-		writerExecutor = Executors.newFixedThreadPool(config.tables.size() * 4);
+
+		int threads = config.tables.size() * 4;
+		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<>(100);
+		writerExecutor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, new ThreadPoolExecutor.CallerRunsPolicy());
 
 		return 0;
 	}

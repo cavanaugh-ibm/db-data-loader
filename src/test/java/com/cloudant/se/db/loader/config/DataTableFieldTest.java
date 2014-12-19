@@ -18,7 +18,7 @@ public class DataTableFieldTest {
 		f.dbFieldName = "testing";
 		f.validate();
 
-		Assert.assertEquals(f.dbFieldName, f.jsonFieldName);
+		Assert.assertEquals("Testing", f.jsonFieldName);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -35,7 +35,7 @@ public class DataTableFieldTest {
 		f.dbFieldName = "testing";
 		f.validate();
 
-		Assert.assertEquals(f.dbFieldName, f.jsonFieldName);
+		Assert.assertEquals("Testing", f.jsonFieldName);
 	}
 
 	@Test(expected = IllegalArgumentException.class)

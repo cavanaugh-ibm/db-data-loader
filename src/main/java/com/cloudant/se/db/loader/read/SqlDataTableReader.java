@@ -42,10 +42,6 @@ public class SqlDataTableReader extends ADataTableReader {
 			ResultSetMetaData rsmd = rs.getMetaData();
 
 			while (rs.next()) {
-				//
-				// Reset our state for the current row
-				reset();
-
 				int numColumns = rsmd.getColumnCount();
 				for (int i = 1; i <= numColumns; i++) {
 					addField(rsmd.getColumnName(i), rs.getString(i));
