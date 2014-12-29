@@ -20,12 +20,6 @@ public class LockManager {
 		locksHeld.get().put(key, s);
 	}
 
-	private static void setupLocksHeld() {
-		if (locksHeld.get() == null) {
-			locksHeld.set(new HashMap<String, Semaphore>());
-		}
-	}
-
 	public static void release(String key) {
 		setupLocksHeld();
 
@@ -34,6 +28,12 @@ public class LockManager {
 			s.release();
 		} else {
 			throw new RuntimeException("Asked to release a lock on \"" + key + "\" but lock was not held");
+		}
+	}
+
+	private static void setupLocksHeld() {
+		if (locksHeld.get() == null) {
+			locksHeld.set(new HashMap<String, Semaphore>());
 		}
 	}
 }

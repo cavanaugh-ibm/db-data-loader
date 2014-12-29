@@ -22,21 +22,18 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 
 /**
  * Things to consider in this - Should we use a pool for objects to speed up?
- * 
+ *
  * @author Cavanaugh
  *
  */
 public class App {
-	public enum TransformLanguage {
-		GROOVY, JAVASCRIPT
-	};
+	private static final Logger	log				= Logger.getLogger(App.class);	;
 
-	private static final Logger	log				= Logger.getLogger(App.class);
-
-	protected AppOptions		options			= null;
 	protected AppConfig			config			= null;
 
+	protected AppOptions		options			= null;
 	protected ExecutorService	readerExecutor	= null;
+
 	protected ExecutorService	writerExecutor	= null;
 
 	public App() {
@@ -103,26 +100,14 @@ public class App {
 		return 0;
 	}
 
+	private void logError(String s) {
+		log.error(s);
+	}
+
 	private void showUsage(JCommander jCommander) {
 		jCommander.usage();
 		if (options.unrecognizedOptions != null && options.debug) {
 			logError("Unrecognized Options: " + options.unrecognizedOptions.toString());
-		}
-	}
-
-	public static void main(String[] args)
-	{
-		App app = new App();
-		int configReturnCode = app.config(args);
-		switch (configReturnCode) {
-			case 0:
-				// config worked, user accepted design
-				System.exit(app.start());
-				break;
-			default:
-				// config did NOT work, error out
-				System.exit(configReturnCode);
-				break;
 		}
 	}
 
@@ -182,7 +167,23 @@ public class App {
 		return 0;
 	}
 
-	private void logError(String s) {
-		log.error(s);
+	public static void main(String[] args)
+	{
+		App app = new App();
+		int configReturnCode = app.config(args);
+		switch (configReturnCode) {
+			case 0:
+				// config worked, user accepted design
+				System.exit(app.start());
+				break;
+			default:
+				// config did NOT work, error out
+				System.exit(configReturnCode);
+				break;
+		}
+	}
+
+	public enum TransformLanguage {
+		GROOVY, JAVASCRIPT
 	}
 }

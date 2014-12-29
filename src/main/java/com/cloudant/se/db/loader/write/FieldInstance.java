@@ -3,9 +3,9 @@ package com.cloudant.se.db.loader.write;
 import com.cloudant.se.db.loader.config.DataTableField;
 
 public class FieldInstance {
+	public DataTableField	field;
 	public String			name;
 	public Object			value;
-	public DataTableField	field;
 
 	public FieldInstance(String name, Object value, DataTableField field) {
 		this.name = name;

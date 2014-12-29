@@ -12,18 +12,10 @@ public class DataTableFieldTest {
 		f.validate();
 	}
 
-	@Test
-	public void testValidateIncludeNoJson() {
-		DataTableField f = new DataTableField();
-		f.dbFieldName = "testing";
-		f.validate();
-
-		Assert.assertEquals("Testing", f.jsonFieldName);
-	}
-
 	@Test(expected = IllegalArgumentException.class)
-	public void testValidateIncludeNoDb() {
+	public void testValidateExcludeNoDb() {
 		DataTableField f = new DataTableField();
+		f.include = false;
 		f.jsonFieldName = "testing";
 		f.validate();
 	}
@@ -38,14 +30,6 @@ public class DataTableFieldTest {
 		Assert.assertEquals("Testing", f.jsonFieldName);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testValidateExcludeNoDb() {
-		DataTableField f = new DataTableField();
-		f.include = false;
-		f.jsonFieldName = "testing";
-		f.validate();
-	}
-
 	@Test
 	public void testValidateGood() {
 		DataTableField f = new DataTableField();
@@ -57,5 +41,21 @@ public class DataTableFieldTest {
 		Assert.assertEquals("testing", f.jsonFieldName);
 		Assert.assertNull(f.transformScript);
 		Assert.assertEquals(TransformLanguage.GROOVY, f.transformScriptLanguage);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testValidateIncludeNoDb() {
+		DataTableField f = new DataTableField();
+		f.jsonFieldName = "testing";
+		f.validate();
+	}
+
+	@Test
+	public void testValidateIncludeNoJson() {
+		DataTableField f = new DataTableField();
+		f.dbFieldName = "testing";
+		f.validate();
+
+		Assert.assertEquals("Testing", f.jsonFieldName);
 	}
 }

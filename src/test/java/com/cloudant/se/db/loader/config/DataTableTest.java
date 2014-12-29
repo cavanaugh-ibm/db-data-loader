@@ -7,6 +7,37 @@ import org.junit.Test;
 import com.cloudant.se.db.loader.config.DataTable.NestType;
 
 public class DataTableTest {
+	@Test
+	public void testValidateArray() {
+		DataTable d = new DataTable();
+		d.jsonDocumentType = "JunitTesting";
+		d.nestType = NestType.ARRAY;
+		d.fileNames.add("bogus_file_name");
+		d.idFields.add("x");
+
+		// Missing all
+		try {
+			d.validate();
+			fail("Array documents should require parentIdFields, nestField");
+		} catch (IllegalArgumentException e) {
+		}
+
+		// Missing nestField
+		d.parentIdFields.add("nParentId");
+		try {
+			d.validate();
+			fail("Array documents should require parentIdFields, nestField");
+		} catch (IllegalArgumentException e) {
+		}
+
+		d.nestField = "Children";
+		try {
+			d.validate();
+		} catch (IllegalArgumentException e) {
+			fail("Array documents requirements were met but complained about - " + e.getMessage());
+		}
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testValidateEmpty() {
 		DataTableField f = new DataTableField();
@@ -86,6 +117,36 @@ public class DataTableTest {
 	}
 
 	@Test
+	public void testValidateObject() {
+		DataTable d = new DataTable();
+		d.jsonDocumentType = "JunitTesting";
+		d.nestType = NestType.OBJECT;
+		d.fileNames.add("bogus_file_name");
+
+		// Missing all
+		try {
+			d.validate();
+			fail("Object documents should require parentIdFields, nestField");
+		} catch (IllegalArgumentException e) {
+		}
+
+		// Missing nestField
+		d.parentIdFields.add("nParentId");
+		try {
+			d.validate();
+			fail("Object documents should require parentIdFields, nestField");
+		} catch (IllegalArgumentException e) {
+		}
+
+		d.nestField = "Children";
+		try {
+			d.validate();
+		} catch (IllegalArgumentException e) {
+			fail("Object documents requirements were met");
+		}
+	}
+
+	@Test
 	public void testValidateParent() {
 		DataTable d = new DataTable();
 		d.jsonDocumentType = "JunitTesting";
@@ -142,67 +203,6 @@ public class DataTableTest {
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			fail("Reference documents requirements were met");
-		}
-	}
-
-	@Test
-	public void testValidateArray() {
-		DataTable d = new DataTable();
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.ARRAY;
-		d.fileNames.add("bogus_file_name");
-		d.idFields.add("x");
-
-		// Missing all
-		try {
-			d.validate();
-			fail("Array documents should require parentIdFields, nestField");
-		} catch (IllegalArgumentException e) {
-		}
-
-		// Missing nestField
-		d.parentIdFields.add("nParentId");
-		try {
-			d.validate();
-			fail("Array documents should require parentIdFields, nestField");
-		} catch (IllegalArgumentException e) {
-		}
-
-		d.nestField = "Children";
-		try {
-			d.validate();
-		} catch (IllegalArgumentException e) {
-			fail("Array documents requirements were met but complained about - " + e.getMessage());
-		}
-	}
-
-	@Test
-	public void testValidateObject() {
-		DataTable d = new DataTable();
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.OBJECT;
-		d.fileNames.add("bogus_file_name");
-
-		// Missing all
-		try {
-			d.validate();
-			fail("Object documents should require parentIdFields, nestField");
-		} catch (IllegalArgumentException e) {
-		}
-
-		// Missing nestField
-		d.parentIdFields.add("nParentId");
-		try {
-			d.validate();
-			fail("Object documents should require parentIdFields, nestField");
-		} catch (IllegalArgumentException e) {
-		}
-
-		d.nestField = "Children";
-		try {
-			d.validate();
-		} catch (IllegalArgumentException e) {
-			fail("Object documents requirements were met");
 		}
 	}
 }

@@ -12,25 +12,25 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Sets;
 
 public class AppConfig {
-	public int				maxRetries			= 20;
+	@JsonIgnore
+	public CloudantClient	client				= null;
+	public String			cloudantAccount		= null;
+	public String			cloudantDatabase	= null;
+	public String			cloudantPass		= null;
+	public String			cloudantUser		= null;
 	public char				concatinationChar	= '_';
+	@JsonIgnore
+	public Database			database			= null;
+
 	public File				defaultDirectory	= new File(".");
 	public String			defaultSqlDriver	= null;
 	public String			defaultSqlPass		= null;
 	public String			defaultSqlUrl		= null;
+
 	public String			defaultSqlUser		= null;
 
-	public String			cloudantAccount		= null;
-	public String			cloudantDatabase	= null;
-	public String			cloudantUser		= null;
-	public String			cloudantPass		= null;
-
+	public int				maxRetries			= 20;
 	public Set<DataTable>	tables				= Sets.newLinkedHashSet();
-
-	@JsonIgnore
-	public CloudantClient	client				= null;
-	@JsonIgnore
-	public Database			database			= null;
 
 	@Override
 	public String toString() {

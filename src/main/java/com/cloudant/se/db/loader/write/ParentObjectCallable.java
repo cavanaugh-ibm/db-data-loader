@@ -30,6 +30,7 @@ public class ParentObjectCallable extends ABaseObjectCallable {
 		return 0;
 	}
 
+	@Override
 	protected Map<String, Object> handleConflict() throws JsonProcessingException, IOException {
 		Map<String, Object> fromCloudant = getFromCloudant(id);
 		fromCloudant.putAll(toMap());

@@ -30,9 +30,9 @@ public abstract class ADataTableReader implements Callable<Integer> {
 	protected AppConfig					config			= null;
 
 	protected ExecutorService			executor		= null;
+	protected ABaseObjectCallable		outputCallable	= null;
 	protected int						processed		= 0;
 	protected DataTable					table			= null;
-	protected ABaseObjectCallable		outputCallable	= null;
 
 	public ADataTableReader(AppConfig config, DataTable table, ExecutorService executor) {
 		this.config = config;

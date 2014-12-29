@@ -10,8 +10,8 @@ public class DataTableField {
 	public String				dbFieldName				= null;
 
 	public boolean				include					= true;
-	public boolean				isReference				= false;
 	public boolean				isNumericHint			= false;
+	public boolean				isReference				= false;
 	public String				jsonFieldName			= null;
 	public String				transformScript			= null;
 	public TransformLanguage	transformScriptLanguage	= TransformLanguage.GROOVY;
