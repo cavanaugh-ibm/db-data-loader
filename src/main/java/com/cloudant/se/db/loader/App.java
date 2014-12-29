@@ -93,8 +93,8 @@ public class App {
 		// Setup our executor service
 		readerExecutor = Executors.newFixedThreadPool(config.tables.size());
 
-		int threads = config.tables.size() * 4;
-		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<>(100);
+		int threads = config.numThreads;
+		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<>(threads * 2);
 		writerExecutor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, new ThreadPoolExecutor.CallerRunsPolicy());
 
 		return 0;

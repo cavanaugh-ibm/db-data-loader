@@ -30,6 +30,7 @@ public class AppConfig {
 	public String			defaultSqlUser		= null;
 
 	public int				maxRetries			= 20;
+	public int				numThreads			= 0;
 	public Set<DataTable>	tables				= Sets.newLinkedHashSet();
 
 	@Override
@@ -56,6 +57,12 @@ public class AppConfig {
 			}
 
 			table.validate();
+		}
+
+		//
+		// Do any calculations that are required
+		if (numThreads < 1) {
+			numThreads = tables.size() * 4;
 		}
 	}
 }
