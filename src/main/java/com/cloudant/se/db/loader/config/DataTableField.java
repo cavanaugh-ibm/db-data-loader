@@ -4,7 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.ektorp.util.Assert;
 
-import com.cloudant.se.db.loader.App.TransformLanguage;
+import com.cloudant.se.db.loader.AppConstants.TransformLanguage;
 
 public class DataTableField {
 	public String				dbFieldName				= null;

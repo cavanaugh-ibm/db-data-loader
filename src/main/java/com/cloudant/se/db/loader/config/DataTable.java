@@ -5,6 +5,8 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.Assert;
 
+import com.cloudant.se.db.loader.AppConstants.FileType;
+import com.cloudant.se.db.loader.AppConstants.NestType;
 import com.google.common.collect.Sets;
 
 public class DataTable {
@@ -92,13 +94,5 @@ public class DataTable {
 				field.validate();
 			}
 		}
-	}
-
-	public enum FileType {
-		CSV, JSON, XML
-	}
-
-	public enum NestType {
-		ARRAY, OBJECT, PARENT, REFERENCE, REFERENCE_ARRAY
 	}
 }

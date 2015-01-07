@@ -11,30 +11,30 @@ import org.apache.commons.lang.WordUtils;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.config.DataTableField;
-import com.cloudant.se.db.loader.write.ABaseObjectCallable;
+import com.cloudant.se.db.loader.write.BaseDocCallable;
 import com.cloudant.se.db.loader.write.FieldInstance;
-import com.cloudant.se.db.loader.write.NestedObjectArrayCallable;
-import com.cloudant.se.db.loader.write.NestedObjectCallable;
-import com.cloudant.se.db.loader.write.ParentObjectCallable;
-import com.cloudant.se.db.loader.write.ReferenceObjectArrayCallable;
-import com.cloudant.se.db.loader.write.ReferenceObjectCallable;
+import com.cloudant.se.db.loader.write.NestedDocArrayCallable;
+import com.cloudant.se.db.loader.write.NestedDocCallable;
+import com.cloudant.se.db.loader.write.ParentDocCallable;
+import com.cloudant.se.db.loader.write.ReferenceDocArrayCallable;
+import com.cloudant.se.db.loader.write.ReferenceDocCallable;
 
 /**
  * This class is NOT thread safe
  *
  * @author Cloudant
  */
-public abstract class ADataTableReader implements Callable<Integer> {
+public abstract class BaseDataTableReader implements Callable<Integer> {
 	// private static final Logger log = Logger.getLogger(ADataTableReader.class);
 	private Map<String, FieldInstance>	currentRow		= new TreeMap<>();
 	protected AppConfig					config			= null;
 
 	protected ExecutorService			executor		= null;
-	protected ABaseObjectCallable		outputCallable	= null;
+	protected BaseDocCallable			outputCallable	= null;
 	protected int						processed		= 0;
 	protected DataTable					table			= null;
 
-	public ADataTableReader(AppConfig config, DataTable table, ExecutorService executor) {
+	public BaseDataTableReader(AppConfig config, DataTable table, ExecutorService executor) {
 		this.config = config;
 		this.table = table;
 		this.executor = executor;
@@ -79,22 +79,22 @@ public abstract class ADataTableReader implements Callable<Integer> {
 
 		//
 		// We have all the data from the source in our internal state, go ahead with processing
-		ABaseObjectCallable callable = null;
+		BaseDocCallable callable = null;
 		switch (table.nestType) {
 			case ARRAY:
-				callable = new NestedObjectArrayCallable(config, table);
+				callable = new NestedDocArrayCallable(config, table);
 				break;
 			case OBJECT:
-				callable = new NestedObjectCallable(config, table);
+				callable = new NestedDocCallable(config, table);
 				break;
 			case PARENT:
-				callable = new ParentObjectCallable(config, table);
+				callable = new ParentDocCallable(config, table);
 				break;
 			case REFERENCE:
-				callable = new ReferenceObjectCallable(config, table);
+				callable = new ReferenceDocCallable(config, table);
 				break;
 			case REFERENCE_ARRAY:
-				callable = new ReferenceObjectArrayCallable(config, table);
+				callable = new ReferenceDocArrayCallable(config, table);
 				break;
 			default:
 				break;

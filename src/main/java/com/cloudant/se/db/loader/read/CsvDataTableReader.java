@@ -12,7 +12,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 
-public class CsvDataTableReader extends ADataTableReader {
+public class CsvDataTableReader extends BaseDataTableReader {
 	private static final Logger	log	= Logger.getLogger(CsvDataTableReader.class);
 
 	public CsvDataTableReader(AppConfig config, DataTable table, ExecutorService writerExecutor) {

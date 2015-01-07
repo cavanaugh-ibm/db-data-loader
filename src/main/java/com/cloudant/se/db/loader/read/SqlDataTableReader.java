@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 
-public class SqlDataTableReader extends ADataTableReader {
+public class SqlDataTableReader extends BaseDataTableReader {
 	private static final Logger	log	= Logger.getLogger(SqlDataTableReader.class);
 
 	public SqlDataTableReader(AppConfig config, DataTable table, ExecutorService writerExecutor) {

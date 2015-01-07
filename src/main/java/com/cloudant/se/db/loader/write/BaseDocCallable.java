@@ -14,33 +14,40 @@ import java.util.concurrent.Callable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
+import org.lightcouch.CouchDbException;
 import org.lightcouch.DocumentConflictException;
 
+import com.cloudant.se.db.loader.AppConstants.WriteCode;
 import com.cloudant.se.db.loader.LockManager;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
+import com.cloudant.se.db.loader.exception.StructureException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 
-public abstract class ABaseObjectCallable implements Callable<Integer> {
-	protected static final Logger			log			= Logger.getLogger(ABaseObjectCallable.class);
+public abstract class BaseDocCallable implements Callable<Integer> {
+	protected static final Logger			log			= Logger.getLogger(BaseDocCallable.class);
 	protected static final String			REF_PREFIX	= "@";
 
 	protected AppConfig						config		= null;
 	protected Map<String, FieldInstance>	data		= new LinkedHashMap<>();
+	protected Gson							gson		= null;
+
 	protected String						id			= null;
 
 	protected Joiner						keyJoiner	= null;
-
 	protected String						parentId	= null;
+
 	protected DataTable						table		= null;
 
-	public ABaseObjectCallable(AppConfig config, DataTable table) {
+	public BaseDocCallable(AppConfig config, DataTable table) {
 		this.config = config;
 		this.table = table;
 
+		this.gson = new Gson();
 		this.keyJoiner = Joiner.on(config.concatinationChar).skipNulls();
 	}
 
@@ -50,13 +57,15 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 
 	@Override
 	public final Integer call() throws Exception {
-		data.put("DocumentType", new FieldInstance("DocumentType", table.jsonDocumentType, null));
-
-		this.id = buildIdFrom(table.idFields);
-		this.parentId = buildIdFrom(table.parentIdFields);
+		log.debug(" *** call starting *** ");
 
 		int rc = 0;
 		try {
+			data.put("DocumentType", new FieldInstance("DocumentType", table.jsonDocumentType, null));
+
+			this.id = buildIdFrom(table.idFields);
+			this.parentId = buildIdFrom(table.parentIdFields);
+
 			rc = handle();
 		} catch (NullPointerException e) {
 			e.printStackTrace();
@@ -65,31 +74,56 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 			log.error("Error while saving record");
 		}
 
+		log.debug(" *** call finished *** ");
 		return rc;
 	}
 
 	private boolean insert(Map<String, Object> map) {
+		Object id = map.get("_id");
 		try {
-			log.debug("Calling remote save " + map.get("_id"));
+			log.debug("[id=" + id + "] - save - remote call");
 			config.database.save(map);
 			return true;
 		} catch (DocumentConflictException e) {
+			log.debug("[id=" + id + "] - insert - DocumentConflictException - returning false");
 			return false;
+		} catch (CouchDbException e) {
+			if (e.getCause() != null) {
+				log.debug("[id=" + id + "] - insert - CouchDbException - " + e.getCause().getMessage());
+				if (StringUtils.contains(e.getCause().getMessage(), "Connection timed out: connect")) {
+					log.debug("[id=" + id + "] - insert - CouchDbException - timeout - returning false");
+					return false;
+				}
+			}
+
+			throw e;
 		}
 	}
 
 	private boolean update(Map<String, Object> map) {
+		Object id = map.get("_id");
 		try {
-			log.debug("Calling remote update " + map.get("_id"));
+			log.debug("[id=" + id + "] - update - remote call");
 			config.database.update(map);
 			return true;
 		} catch (DocumentConflictException e) {
+			log.debug("[id=" + id + "] - update - DocumentConflictException - returning false");
 			return false;
+		} catch (CouchDbException e) {
+			if (e.getCause() != null) {
+				log.debug("[id=" + id + "] - update - CouchDbException - " + e.getCause().getMessage());
+				if (StringUtils.contains(e.getCause().getMessage(), "Connection timed out: connect")) {
+					log.debug("[id=" + id + "] - update - CouchDbException - timeout - returning false");
+					return false;
+				}
+			}
+
+			throw e;
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	protected void addToArrayAt(Map<String, Object> source, String field, Map<String, Object> newData) throws Exception {
+	protected void addToArrayAt(Map<String, Object> source, String field, Map<String, Object> newData) throws StructureException {
 		List<Map<String, Object>> items = null;
 
 		if (source.containsKey(table.nestField)) {
@@ -98,7 +132,7 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 			if (nestField instanceof List) {
 				items = (List<Map<String, Object>>) source.get(table.nestField);
 			} else {
-				throw new Exception("Structure from the database is not what we expected");
+				throw new StructureException("Structure from the database is not what we expected");
 			}
 		} else {
 			items = new ArrayList<>();
@@ -121,7 +155,7 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected void addToArrayAt(Map<String, Object> source, String field, String newData) throws Exception {
+	protected void addToArrayAt(Map<String, Object> source, String field, String newData) throws StructureException {
 		List<String> items = null;
 
 		if (source.containsKey(table.nestField)) {
@@ -130,7 +164,7 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 			if (nestField instanceof List) {
 				items = (List<String>) source.get(table.nestField);
 			} else {
-				throw new Exception("Structure from the database is not what we expected");
+				throw new StructureException("Structure from the database is not what we expected");
 			}
 		} else {
 			items = new ArrayList<>();
@@ -180,13 +214,17 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 	}
 
 	protected Map<String, Object> getFromCloudant(String id) throws JsonProcessingException, IOException {
+		log.debug("[id=" + id + "] - read - call");
 		InputStream is = config.database.find(id);
-		return new ObjectMapper().reader(Map.class).readValue(is);
+		Map<String, Object> map = new ObjectMapper().reader(Map.class).readValue(is);
+		log.debug("[id=" + id + "] - read - success");
+
+		return map;
 	}
 
 	protected abstract Integer handle() throws Exception;
 
-	protected abstract Map<String, Object> handleConflict() throws Exception;
+	protected abstract Map<String, Object> handleConflict() throws StructureException, JsonProcessingException, IOException;
 
 	protected Map<String, Object> toMap() {
 		Map<String, Object> map = new LinkedHashMap<>();
@@ -213,35 +251,47 @@ public abstract class ABaseObjectCallable implements Callable<Integer> {
 		return map;
 	}
 
-	protected boolean upsert(String id, Map<String, Object> map) throws Exception {
-		LockManager.acquire(id);
-
-		// log.error("Running in thread - " + Thread.currentThread().getName());
+	protected WriteCode upsert(String id, Map<String, Object> map) {
 		try {
-			if (insert(map)) {
-				//
-				// Insert worked, nothing else to do in this scenario
-				return true;
-			} else {
-				//
-				// Conflict, get the old version, merge in our changes (adding)
-				// TODO add this to the configuration (max iterations)
-				int i = 0;
-				while (i < config.maxRetries) {
-					i++;
-					Map<String, Object> merged = handleConflict();
+			LockManager.acquire(id);
 
-					if (update(merged)) {
-						return true;
-					} else {
-						continue;
+			Map<String, Object> toUpsert = map;
+			try {
+				if (insert(toUpsert)) {
+					//
+					// Insert worked, nothing else to do in this scenario
+					log.debug("[id=" + id + "] - insert - succeeded");
+					return WriteCode.INSERT;
+				} else {
+					//
+					// Conflict, get the old version, merge in our changes (adding)
+					int i = 0;
+					while (i < config.maxRetries) {
+						i++;
+						toUpsert = handleConflict();
+
+						if (update(toUpsert)) {
+							log.debug("[id=" + id + "] - update - succeeded");
+							return WriteCode.UPDATE;
+						} else {
+							continue;
+						}
 					}
-				}
-			}
-		} finally {
-			LockManager.release(id);
-		}
 
-		return false;
+					//
+					// If we get to here it means we passed the max attempts - log that we did not write the message
+					log.warn("[id=" + id + "] - Unable to upsert a document after " + config.maxRetries + " attempts - [" + gson.toJson(toUpsert) + "]");
+					return WriteCode.MAX_ATTEMPTS;
+				}
+			} catch (Exception e) {
+				log.warn("[id=" + id + "] - Unable to upsert a document due to exception - [" + gson.toJson(toUpsert) + "]", e);
+				return WriteCode.EXCEPTION;
+			} finally {
+				LockManager.release(id);
+			}
+		} catch (InterruptedException e) {
+			log.warn("[id=" + id + "] - Unable to upsert a document due to lock exception - [" + gson.toJson(map) + "]");
+			return WriteCode.EXCEPTION;
+		}
 	}
 }

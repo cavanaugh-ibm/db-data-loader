@@ -4,34 +4,39 @@ import java.io.File;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.util.Assert;
 
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
+import com.cloudant.se.db.loader.write.BaseDocCallable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Sets;
 
 public class AppConfig {
 	@JsonIgnore
-	public CloudantClient	client				= null;
-	public String			cloudantAccount		= null;
-	public String			cloudantDatabase	= null;
-	public String			cloudantPass		= null;
-	public String			cloudantUser		= null;
-	public char				concatinationChar	= '_';
+	protected static final Logger	log					= Logger.getLogger(BaseDocCallable.class);
+
 	@JsonIgnore
-	public Database			database			= null;
+	public CloudantClient			client				= null;
+	public String					cloudantAccount		= null;
+	public String					cloudantDatabase	= null;
+	public String					cloudantPass		= null;
+	public String					cloudantUser		= null;
+	public char						concatinationChar	= '_';
+	@JsonIgnore
+	public Database					database			= null;
 
-	public File				defaultDirectory	= new File(".");
-	public String			defaultSqlDriver	= null;
-	public String			defaultSqlPass		= null;
-	public String			defaultSqlUrl		= null;
+	public File						defaultDirectory	= new File(".");
+	public String					defaultSqlDriver	= null;
+	public String					defaultSqlPass		= null;
+	public String					defaultSqlUrl		= null;
 
-	public String			defaultSqlUser		= null;
+	public String					defaultSqlUser		= null;
 
-	public int				maxRetries			= 20;
-	public int				numThreads			= 0;
-	public Set<DataTable>	tables				= Sets.newLinkedHashSet();
+	public int						maxRetries			= 20;
+	public int						numThreads			= 0;
+	public Set<DataTable>			tables				= Sets.newLinkedHashSet();
 
 	@Override
 	public String toString() {
@@ -40,14 +45,16 @@ public class AppConfig {
 	}
 
 	public void validate() {
-		Assert.notEmpty(tables, "Must define at least one table to load");
 		Assert.hasText(cloudantAccount, "Must provde a cloudant account to work with");
 		Assert.hasText(cloudantDatabase, "Must provde a cloudant database to work with");
 		Assert.hasText(cloudantUser, "Must provde a cloudant user name");
 		Assert.hasText(cloudantPass, "Must provde a cloudant password");
 
+		log.debug("Validation of cloudant destination succeeded");
+
 		//
 		// Give each table the defaults if it needs it and then let the table validate
+		Assert.notEmpty(tables, "Must define at least one table to load");
 		for (DataTable table : tables) {
 			if (table.useDatabase) {
 				table.sqlDriver = StringUtils.isNotBlank(table.sqlDriver) ? table.sqlDriver : defaultSqlDriver;
@@ -58,11 +65,12 @@ public class AppConfig {
 
 			table.validate();
 		}
+		log.debug("Validation of data tables succeeded");
 
 		//
 		// Do any calculations that are required
 		if (numThreads < 1) {
-			numThreads = tables.size() * 4;
+			numThreads = tables.size() * 6;
 		}
 	}
 }

@@ -4,7 +4,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import com.cloudant.se.db.loader.config.DataTable.NestType;
+import com.cloudant.se.db.loader.AppConstants.NestType;
 
 public class DataTableTest {
 	@Test

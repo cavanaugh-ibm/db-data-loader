@@ -3,7 +3,7 @@ package com.cloudant.se.db.loader.config;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cloudant.se.db.loader.App.TransformLanguage;
+import com.cloudant.se.db.loader.AppConstants.TransformLanguage;
 
 public class DataTableFieldTest {
 	@Test(expected = IllegalArgumentException.class)

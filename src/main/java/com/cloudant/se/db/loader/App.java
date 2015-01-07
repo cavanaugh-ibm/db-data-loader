@@ -5,9 +5,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.beust.jcommander.JCommander;
@@ -19,6 +21,7 @@ import com.cloudant.se.db.loader.read.CsvDataTableReader;
 import com.cloudant.se.db.loader.read.SqlDataTableReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Things to consider in this - Should we use a pool for objects to speed up?
@@ -30,10 +33,9 @@ public class App {
 	private static final Logger	log				= Logger.getLogger(App.class);	;
 
 	protected AppConfig			config			= null;
-
 	protected AppOptions		options			= null;
-	protected ExecutorService	readerExecutor	= null;
 
+	protected ExecutorService	readerExecutor	= null;
 	protected ExecutorService	writerExecutor	= null;
 
 	public App() {
@@ -59,6 +61,20 @@ public class App {
 		if (options.help) {
 			showUsage(jCommander);
 			return 0;
+		}
+
+		//
+		// Enable debugging if asked
+		if (options.debug_cloudant || options.debug_http) {
+			// Logger.getRootLogger().setLevel(Level.DEBUG);
+			if (options.debug_cloudant) {
+				Logger.getLogger("com.cloudant").setLevel(Level.DEBUG);
+				Logger.getLogger("org.lightcouch").setLevel(Level.DEBUG);
+			}
+
+			if (options.debug_http) {
+				Logger.getLogger("org.apache.http").setLevel(Level.DEBUG);
+			}
 		}
 
 		//
@@ -91,24 +107,18 @@ public class App {
 		}
 		//
 		// Setup our executor service
-		readerExecutor = Executors.newFixedThreadPool(config.tables.size());
+		readerExecutor = Executors.newFixedThreadPool(config.tables.size(), new ThreadFactoryBuilder().setNameFormat("ldr-r-%d").build());
 
 		int threads = config.numThreads;
-		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<>(threads * 2);
-		writerExecutor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, new ThreadPoolExecutor.CallerRunsPolicy());
+		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<>(threads * 3);
+		ThreadFactory writeThreadFactory = new ThreadFactoryBuilder().setNameFormat("ldr-w-%d").build();
+		writerExecutor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, writeThreadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
 		return 0;
 	}
 
-	private void logError(String s) {
-		log.error(s);
-	}
-
 	private void showUsage(JCommander jCommander) {
 		jCommander.usage();
-		if (options.unrecognizedOptions != null && options.debug) {
-			logError("Unrecognized Options: " + options.unrecognizedOptions.toString());
-		}
 	}
 
 	private int start() {
@@ -181,9 +191,5 @@ public class App {
 				System.exit(configReturnCode);
 				break;
 		}
-	}
-
-	public enum TransformLanguage {
-		GROOVY, JAVASCRIPT
 	}
 }
