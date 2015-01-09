@@ -15,28 +15,33 @@ import com.google.common.collect.Sets;
 
 public class AppConfig {
 	@JsonIgnore
-	protected static final Logger	log					= Logger.getLogger(BaseDocCallable.class);
+	protected static final Logger	log						= Logger.getLogger(BaseDocCallable.class);
 
 	@JsonIgnore
-	public CloudantClient			client				= null;
-	public String					cloudantAccount		= null;
-	public String					cloudantDatabase	= null;
-	public String					cloudantPass		= null;
-	public String					cloudantUser		= null;
-	public char						concatinationChar	= '_';
+	public CloudantClient			client					= null;
+	public String					cloudantAccount			= null;
+	public String					cloudantDatabase		= null;
+	public String					cloudantPass			= null;
+	public String					cloudantUser			= null;
+	public char						concatinationChar		= '_';
 	@JsonIgnore
-	public Database					database			= null;
+	public Database					database				= null;
 
-	public File						defaultDirectory	= new File(".");
-	public String					defaultSqlDriver	= null;
-	public String					defaultSqlPass		= null;
-	public String					defaultSqlUrl		= null;
+	public File						defaultDirectory		= new File(".");
+	public String					defaultSqlDriver		= null;
+	public String					defaultSqlPass			= null;
+	public String					defaultSqlUrl			= null;
 
-	public String					defaultSqlUser		= null;
+	public String					defaultSqlUser			= null;
 
-	public int						maxRetries			= 20;
-	public int						numThreads			= 0;
-	public Set<DataTable>			tables				= Sets.newLinkedHashSet();
+	public int						maxRetries				= 20;
+	public int						numThreads				= 0;
+	public Set<DataTable>			tables					= Sets.newLinkedHashSet();
+
+	public boolean					autoCastDatesToNumbers	= false;
+	public boolean					autoCastDatesToStrings	= false;
+	public String					autoCastDatesFormat		= null;
+	public String					autoCastDatesTimezone	= null;
 
 	@Override
 	public String toString() {
@@ -45,15 +50,29 @@ public class AppConfig {
 	}
 
 	public void validate() {
+		log.info("Validating configuration");
+		//
+		// Validate our destination
 		Assert.hasText(cloudantAccount, "Must provde a cloudant account to work with");
 		Assert.hasText(cloudantDatabase, "Must provde a cloudant database to work with");
 		Assert.hasText(cloudantUser, "Must provde a cloudant user name");
 		Assert.hasText(cloudantPass, "Must provde a cloudant password");
-
-		log.debug("Validation of cloudant destination succeeded");
+		printSetting("Will output to  \"" + cloudantDatabase + "\" in " + cloudantAccount);
 
 		//
-		// Give each table the defaults if it needs it and then let the table validate
+		// Validate our date casting logic
+		Assert.isTrue(!(autoCastDatesToNumbers && autoCastDatesToStrings), "Must chose either auto casting and outputing dates as strings or number");
+		if (autoCastDatesToStrings) {
+			Assert.hasText(autoCastDatesFormat, "Must provde an output format for casted date strings");
+			Assert.hasText(autoCastDatesTimezone, "Must provde a timezone for casted date strings");
+			printSetting("Will auto cast dates and output like \"" + autoCastDatesFormat + "\" in " + autoCastDatesTimezone + " timezone");
+		}
+		if (autoCastDatesToNumbers) {
+			printSetting("Will auto cast dates and output as epoch");
+		}
+
+		//
+		// Validate each of the tables
 		Assert.notEmpty(tables, "Must define at least one table to load");
 		for (DataTable table : tables) {
 			if (table.useDatabase) {
@@ -63,14 +82,19 @@ public class AppConfig {
 				table.sqlUser = StringUtils.isNotBlank(table.sqlUser) ? table.sqlUser : defaultSqlUser;
 			}
 
+			log.info("Validating table");
 			table.validate();
 		}
-		log.debug("Validation of data tables succeeded");
 
 		//
 		// Do any calculations that are required
 		if (numThreads < 1) {
 			numThreads = tables.size() * 6;
 		}
+		printSetting("Number of writer threads - " + numThreads);
+	}
+
+	private void printSetting(String message) {
+		log.info("Global: " + message);
 	}
 }

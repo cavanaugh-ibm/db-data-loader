@@ -2,13 +2,17 @@ package com.cloudant.se.db.loader.write;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.lang.StringUtils;
@@ -27,20 +31,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+import com.joestelmach.natty.DateGroup;
+import com.joestelmach.natty.Parser;
 
 public abstract class BaseDocCallable implements Callable<Integer> {
 	protected static final Logger			log			= Logger.getLogger(BaseDocCallable.class);
 	protected static final String			REF_PREFIX	= "@";
 
+	protected DateFormat					dateFormat	= null;
+
 	protected AppConfig						config		= null;
 	protected Map<String, FieldInstance>	data		= new LinkedHashMap<>();
 	protected Gson							gson		= null;
-
 	protected String						id			= null;
-
 	protected Joiner						keyJoiner	= null;
 	protected String						parentId	= null;
-
 	protected DataTable						table		= null;
 
 	public BaseDocCallable(AppConfig config, DataTable table) {
@@ -49,6 +54,11 @@ public abstract class BaseDocCallable implements Callable<Integer> {
 
 		this.gson = new Gson();
 		this.keyJoiner = Joiner.on(config.concatinationChar).skipNulls();
+
+		if (config.autoCastDatesToStrings) {
+			dateFormat = new SimpleDateFormat(config.autoCastDatesFormat);
+			dateFormat.setTimeZone(TimeZone.getTimeZone(config.autoCastDatesTimezone));
+		}
 	}
 
 	public void addFields(Map<String, FieldInstance> currentRow) {
@@ -232,14 +242,25 @@ public abstract class BaseDocCallable implements Callable<Integer> {
 			if (f.field != null) {
 				Object value = f.value;
 
-				//
-				// Logic to attempt number vs. string
-				if (f.field.isNumericHint && NumberUtils.isNumber(value.toString())) {
-					try {
-						value = NumberUtils.createNumber(value.toString());
-					} catch (NumberFormatException e) {
+				if (f.field.isNumericHint) {
+					//
+					// Logic to attempt number vs. string
+					if (NumberUtils.isNumber(value.toString())) {
+						try {
+							value = NumberUtils.createNumber(value.toString());
+						} catch (NumberFormatException e) {
+						}
 					}
+				} else if (f.field.isDate) {
+					Object newValue = convertDate(f.field.outputNumber, f.field.outputString, f.field.outputDateStringFormat, f.field.outputDateStringTimezone, value.toString());
+					log.trace(f.field.dbFieldName + " - Casting - output - " + value + " --> " + newValue);
+					value = newValue;
+				} else if (!f.field.isNotDate
+						&& (config.autoCastDatesToNumbers || config.autoCastDatesToStrings)
+						&& (f.field.dbFieldName.toLowerCase().endsWith("timestamp") || f.field.dbFieldName.toLowerCase().endsWith("date"))) {
+					value = convertDate(config.autoCastDatesToNumbers, config.autoCastDatesToStrings, config.autoCastDatesFormat, config.autoCastDatesTimezone, value.toString());
 				}
+
 				map.put(f.field.jsonFieldName, f.field.isReference ? REF_PREFIX + value : value);
 			} else {
 				map.put(f.name, f.value);
@@ -249,6 +270,33 @@ public abstract class BaseDocCallable implements Callable<Integer> {
 		map.put(table.idField, id);
 
 		return map;
+	}
+
+	private Object convertDate(boolean outputNumber, boolean outputDate, String outDateFormat, String outDateTimezone, String value) {
+		Parser parser = new Parser();
+		List<DateGroup> groups = parser.parse(value);
+		if (groups.size() == 1) {
+			List<Date> dates = groups.get(0).getDates();
+			if (dates.size() == 1) {
+				//
+				// We were able to parse the date down to a single date and a single group, use its
+				if (outputNumber) {
+					//
+					// Requested it as a number
+					return dates.get(0).getTime();
+				} else if (outputDate) {
+					//
+					// Requested it as a string
+					DateFormat dateFormat = new SimpleDateFormat(outDateFormat);
+					dateFormat.setTimeZone(TimeZone.getTimeZone(outDateTimezone));
+					return dateFormat.format(dates.get(0));
+				}
+			}
+		}
+
+		//
+		// We were not able to pare the date with enough confidence, keep the original
+		return value;
 	}
 
 	protected WriteCode upsert(String id, Map<String, Object> map) {
