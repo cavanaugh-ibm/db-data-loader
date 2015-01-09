@@ -9,6 +9,9 @@ import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.apache.log4j.Logger;
@@ -60,16 +63,23 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 				if (field.include) {
 					if (StringUtils.isNotBlank(field.transformScript)) {
 						try {
+							Object output = null;
 							switch (field.transformScriptLanguage) {
 								case GROOVY:
 									Binding binding = new Binding();
 									binding.setVariable("input", fieldValue);
 									GroovyShell shell = new GroovyShell(binding);
 
-									Object output = shell.evaluate(field.transformScript);
+									output = shell.evaluate(field.transformScript);
 									fieldValue = output == null ? null : output.toString();
 									break;
 								case JAVASCRIPT:
+									ScriptEngineManager factory = new ScriptEngineManager();
+									ScriptEngine engine = factory.getEngineByName("JavaScript");
+									engine.put("input", fieldValue);
+
+									output = engine.eval(field.transformScript);
+									fieldValue = output == null ? null : output.toString();
 									break;
 								default:
 									break;
