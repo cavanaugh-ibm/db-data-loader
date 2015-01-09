@@ -31,6 +31,7 @@ public class DataTable {
 	public String				sqlUser				= null;
 
 	public boolean				useDatabase			= false;
+	public boolean				includeEmpty		= false;
 
 	@Override
 	public String toString() {

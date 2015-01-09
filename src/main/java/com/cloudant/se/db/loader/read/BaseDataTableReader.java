@@ -1,5 +1,9 @@
 package com.cloudant.se.db.loader.read;
 
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import groovy.lang.MissingPropertyException;
+
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
@@ -7,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
+import org.apache.log4j.Logger;
 
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
@@ -25,7 +30,7 @@ import com.cloudant.se.db.loader.write.ReferenceDocCallable;
  * @author Cloudant
  */
 public abstract class BaseDataTableReader implements Callable<Integer> {
-	// private static final Logger log = Logger.getLogger(ADataTableReader.class);
+	protected static final Logger		log				= Logger.getLogger(BaseDataTableReader.class);
 	private Map<String, FieldInstance>	currentRow		= new TreeMap<>();
 	protected AppConfig					config			= null;
 
@@ -53,9 +58,41 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 				foundFromUser = true;
 
 				if (field.include) {
+					if (StringUtils.isNotBlank(field.transformScript)) {
+						try {
+							switch (field.transformScriptLanguage) {
+								case GROOVY:
+									Binding binding = new Binding();
+									binding.setVariable("input", fieldValue);
+									GroovyShell shell = new GroovyShell(binding);
+
+									Object output = shell.evaluate(field.transformScript);
+									fieldValue = output == null ? null : output.toString();
+									break;
+								case JAVASCRIPT:
+									break;
+								default:
+									break;
+							}
+						} catch (MissingPropertyException e) {
+							log.warn(field.dbFieldName + " - Transformation error - script references an unknown property - " + e.getProperty());
+						} catch (Exception e) {
+							System.out.println(e.getClass());
+							log.warn(field.dbFieldName + " - Transformation error - " + e.getMessage());
+						}
+					}
+
 					//
 					// Add it into our row map
-					currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+					if (StringUtils.isNotBlank(fieldValue)) {
+						// Not blank
+						currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+					} else {
+						// Blank, should we store it?
+						if (table.includeEmpty) {
+							currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+						}
+					}
 				} else {
 					//
 					// Do nothing
@@ -68,9 +105,17 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 			// Extra field, nothing to do to it, just keep it
 			DataTableField field = new DataTableField();
 			field.dbFieldName = fieldName;
-			field.jsonFieldName = WordUtils.capitalizeFully(fieldName, new char[] { '_' }).replaceAll("_", "");
+			field.jsonFieldName = WordUtils.capitalize(fieldName, new char[] { '_' }).replaceAll("_", "");
 
-			currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+			if (StringUtils.isNotBlank(fieldValue)) {
+				// Not blank
+				currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+			} else {
+				// Blank, should we store it?
+				if (table.includeEmpty) {
+					currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+				}
+			}
 		}
 	}
 
