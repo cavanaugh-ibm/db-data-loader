@@ -84,6 +84,12 @@ public class App {
 		}
 
 		//
+		// Enable tracing if asked
+		if (options.trace) {
+			Logger.getLogger("com.cloudant").setLevel(Level.TRACE);
+		}
+
+		//
 		// Read the config they gave us
 		try {
 			//

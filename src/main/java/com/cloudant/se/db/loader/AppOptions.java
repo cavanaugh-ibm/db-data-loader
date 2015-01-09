@@ -13,6 +13,9 @@ public class AppOptions {
 	@Parameter(names = { "-log", "-verbose" }, description = "Level of verbosity")
 	protected Integer			verbose	= 0;
 
+	@Parameter(names = { "-trace" }, description = "Level of verbosity", hidden = true)
+	protected boolean			trace	= false;
+
 	@Parameter(names = { "-?", "--help" }, help = true, description = "Display this help")
 	protected boolean			help;
 

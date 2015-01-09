@@ -53,17 +53,26 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 		fieldName = fieldName.trim();
 		fieldValue = fieldValue.trim();
 
+		log.trace(fieldName + " - call - " + fieldValue);
+
 		boolean foundFromUser = false;
 		for (DataTableField field : table.dataFields) {
 			if (StringUtils.equalsIgnoreCase(field.dbFieldName, fieldName)) {
 				//
 				// This is a defined field, handle it the way the user asked us to
 				foundFromUser = true;
+				log.trace(fieldName + " - found in configuration");
 
 				if (field.include) {
+					log.trace(fieldName + " - include = true");
+
 					if (StringUtils.isNotBlank(field.transformScript)) {
+						log.trace(fieldName + " - Transformation script not blank");
 						try {
 							Object output = null;
+							log.trace(fieldName + " - Transformation - type - " + field.transformScriptLanguage);
+							log.trace(fieldName + " - Transformation - script - " + field.transformScript);
+
 							switch (field.transformScriptLanguage) {
 								case GROOVY:
 									Binding binding = new Binding();
@@ -71,6 +80,7 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 									GroovyShell shell = new GroovyShell(binding);
 
 									output = shell.evaluate(field.transformScript);
+									log.trace(fieldName + " - Transformation - output - " + fieldValue + " --> " + output);
 									fieldValue = output == null ? null : output.toString();
 									break;
 								case JAVASCRIPT:
@@ -79,6 +89,7 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 									engine.put("input", fieldValue);
 
 									output = engine.eval(field.transformScript);
+									log.trace(fieldName + " - Transformation - output - " + fieldValue + " --> " + output);
 									fieldValue = output == null ? null : output.toString();
 									break;
 								default:
@@ -96,34 +107,48 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 					// Add it into our row map
 					if (StringUtils.isNotBlank(fieldValue)) {
 						// Not blank
+						log.trace(fieldName + " - final value = " + fieldValue);
 						currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
 					} else {
 						// Blank, should we store it?
 						if (table.includeEmpty) {
+							log.trace(fieldName + " - final value = " + fieldValue);
 							currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+						} else {
+							log.trace(fieldName + " - dropping due to blank and includeEmpty is set to false");
 						}
 					}
 				} else {
 					//
 					// Do nothing
+					log.trace(fieldName + " - include = false");
 				}
 			}
 		}
 
 		if (!foundFromUser) {
+			log.trace(fieldName + " - NOT found in configuration");
+
 			//
 			// Extra field, nothing to do to it, just keep it
 			DataTableField field = new DataTableField();
 			field.dbFieldName = fieldName;
 			field.jsonFieldName = WordUtils.capitalize(fieldName, new char[] { '_' }).replaceAll("_", "");
 
+			log.trace(fieldName + " - setting jsonFieldName to " + field.jsonFieldName);
+
+			
 			if (StringUtils.isNotBlank(fieldValue)) {
 				// Not blank
+				log.trace(fieldName + " - final value = " + fieldValue);
 				currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
 			} else {
 				// Blank, should we store it?
 				if (table.includeEmpty) {
+					log.trace(fieldName + " - final value = " + fieldValue);
 					currentRow.put(fieldName.toLowerCase(), new FieldInstance(fieldName, fieldValue, field));
+				} else {
+					log.trace(fieldName + " - dropping due to blank and includeEmpty is set to false");
 				}
 			}
 		}
