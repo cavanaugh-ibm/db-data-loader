@@ -1,6 +1,9 @@
 package com.cloudant.se.db.loader;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Enumeration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,6 +12,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -60,19 +65,20 @@ public class App {
 		// Show the help if they asked for it
 		if (options.help) {
 			showUsage(jCommander);
-			return 0;
+			return 2;
 		}
 
 		//
 		// Enable debugging if asked
-		if (options.debug_cloudant || options.debug_http) {
+		if (options.verbose > 0) {
 			// Logger.getRootLogger().setLevel(Level.DEBUG);
-			if (options.debug_cloudant) {
+			if (options.verbose >= 1) {
 				Logger.getLogger("com.cloudant").setLevel(Level.DEBUG);
+			}
+			if (options.verbose >= 2) {
 				Logger.getLogger("org.lightcouch").setLevel(Level.DEBUG);
 			}
-
-			if (options.debug_http) {
+			if (options.verbose >= 3) {
 				Logger.getLogger("org.apache.http").setLevel(Level.DEBUG);
 			}
 		}
@@ -179,6 +185,7 @@ public class App {
 
 	public static void main(String[] args)
 	{
+		initLoggers();
 		App app = new App();
 		int configReturnCode = app.config(args);
 		switch (configReturnCode) {
@@ -190,6 +197,27 @@ public class App {
 				// config did NOT work, error out
 				System.exit(configReturnCode);
 				break;
+		}
+	}
+
+	private static void initLoggers() {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+		Logger rootLogger = Logger.getRootLogger();
+		Enumeration<?> appenders = rootLogger.getAllAppenders();
+		FileAppender fa = null;
+		while (appenders.hasMoreElements())
+		{
+			Appender currAppender = (Appender) appenders.nextElement();
+			if (currAppender instanceof FileAppender)
+			{
+				fa = (FileAppender) currAppender;
+			}
+		}
+		if (fa != null)
+		{
+			fa.setFile("load-" + dateFormat.format(new Date()) + ".log");
+			fa.activateOptions();
 		}
 	}
 }
