@@ -137,7 +137,6 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 
 			log.trace(fieldName + " - setting jsonFieldName to " + field.jsonFieldName);
 
-			
 			if (StringUtils.isNotBlank(fieldValue)) {
 				// Not blank
 				log.trace(fieldName + " - final value = " + fieldValue);

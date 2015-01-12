@@ -46,6 +46,8 @@
 					<arguments>
 						<argument>-c</argument>
 						<argument>examples/lm_example/lm.config</argument>
+						<argument>-verbose</argument>
+						<argument>1</argument>
 					</arguments>
 				</configuration>
 			</plugin>
