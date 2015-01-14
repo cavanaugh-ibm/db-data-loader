@@ -23,7 +23,7 @@ public class DataTable {
 
 	public FileType					fileType			= FileType.CSV;
 
-	public String					idField				= "_id";
+	public String					uniqueIdField		= "_id";
 	public Set<String>				idFields			= Sets.newLinkedHashSet();
 	public String					jsonDocumentType	= null;
 
@@ -72,7 +72,7 @@ public class DataTable {
 				// PARENT table records must provide at the very least the idFields
 				Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
 				Assert.hasText(jsonDocumentType, "Must provide the type name for the created document ");
-				Assert.isTrue(StringUtils.equals("_id", idField), "For top level documents, the idField must be \"_id\"");
+				Assert.isTrue(StringUtils.equals("_id", uniqueIdField), "For top level documents, the idField must be \"_id\"");
 				printSetting("_id fields", idFields);
 				break;
 			case ARRAY:
@@ -101,7 +101,7 @@ public class DataTable {
 				Assert.hasText(nestField, "Must provide the field in the parent document that we will insert at");
 				Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
 				Assert.hasText(jsonDocumentType, "Must provide the type name for the created document ");
-				Assert.isTrue(StringUtils.equals("_id", idField), "For top level documents, the idField must be \"_id\"");
+				Assert.isTrue(StringUtils.equals("_id", uniqueIdField), "For top level documents, the idField must be \"_id\"");
 				printSetting("_id fields", idFields);
 				printSetting("parent _id fields", parentIdFields);
 				printSetting("nestField", nestField);
@@ -110,7 +110,7 @@ public class DataTable {
 				break;
 		}
 
-		idField = StringUtils.defaultIfBlank(idField, "_id");
+		uniqueIdField = StringUtils.defaultIfBlank(uniqueIdField, "_id");
 		// System.out.println("Unique key equals - [" + idField + "][" + StringUtils.defaultIfBlank(jsonDocumentType, nestField) + "]");
 
 		if (dataFields != null) {

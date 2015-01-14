@@ -20,10 +20,14 @@ import org.apache.log4j.Logger;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import com.cloudant.client.api.CloudantClient;
+import com.cloudant.client.api.model.ConnectOptions;
+import com.cloudant.se.concurrent.StatusingThreadPoolExecutor;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
+import com.cloudant.se.db.loader.read.BaseDataTableReader;
 import com.cloudant.se.db.loader.read.CsvDataTableReader;
 import com.cloudant.se.db.loader.read.SqlDataTableReader;
+import com.cloudant.se.db.loader.write.BaseDocCallable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -85,8 +89,11 @@ public class App {
 
 		//
 		// Enable tracing if asked
-		if (options.trace) {
-			Logger.getLogger("com.cloudant").setLevel(Level.TRACE);
+		if (options.traceRead) {
+			Logger.getLogger(BaseDataTableReader.class.getPackage().getName()).setLevel(Level.TRACE);
+		}
+		if (options.traceWrite) {
+			Logger.getLogger(BaseDocCallable.class.getPackage().getName()).setLevel(Level.TRACE);
 		}
 
 		//
@@ -124,7 +131,7 @@ public class App {
 		int threads = config.numThreads;
 		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<>(threads * 3);
 		ThreadFactory writeThreadFactory = new ThreadFactoryBuilder().setNameFormat("ldr-w-%d").build();
-		writerExecutor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, writeThreadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+		writerExecutor = new StatusingThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, writeThreadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 
 		return 0;
 	}
@@ -136,7 +143,10 @@ public class App {
 	private int start() {
 		log.info("Configuration complete, starting up");
 		try {
-			config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPass);
+			ConnectOptions options = new ConnectOptions();
+			options.setMaxConnections(config.numThreads);
+
+			config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPass, options);
 			config.database = config.client.database(config.cloudantDatabase, false);
 			log.info(" --- Connected to Cloudant --- ");
 			// log.debug("Available databases - " + config.client.getAllDbs());

@@ -7,27 +7,32 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Semaphore;
 
 public class LockManager {
-	private static ConcurrentMap<String, Semaphore>		locksAvailable	= new ConcurrentHashMap<>();
-	private static ThreadLocal<Map<String, Semaphore>>	locksHeld		= new ThreadLocal<>();
+	private static final boolean								enabled			= false;
+	private static final ConcurrentMap<String, Semaphore>		locksAvailable	= new ConcurrentHashMap<>();
+	private static final ThreadLocal<Map<String, Semaphore>>	locksHeld		= new ThreadLocal<>();
 
 	public static void acquire(String key) throws InterruptedException {
-		setupLocksHeld();
+		if (enabled) {
+			setupLocksHeld();
 
-		locksAvailable.putIfAbsent(key, new Semaphore(1));
-		Semaphore s = locksAvailable.get(key);
+			locksAvailable.putIfAbsent(key, new Semaphore(1));
+			Semaphore s = locksAvailable.get(key);
 
-		s.acquire();
-		locksHeld.get().put(key, s);
+			s.acquire();
+			locksHeld.get().put(key, s);
+		}
 	}
 
 	public static void release(String key) {
-		setupLocksHeld();
+		if (enabled) {
+			setupLocksHeld();
 
-		if (locksHeld.get().containsKey(key)) {
-			Semaphore s = locksHeld.get().remove(key);
-			s.release();
-		} else {
-			throw new RuntimeException("Asked to release a lock on \"" + key + "\" but lock was not held");
+			if (locksHeld.get().containsKey(key)) {
+				Semaphore s = locksHeld.get().remove(key);
+				s.release();
+			} else {
+				throw new RuntimeException("Asked to release a lock on \"" + key + "\" but lock was not held");
+			}
 		}
 	}
 
