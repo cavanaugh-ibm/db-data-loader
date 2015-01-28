@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.cloudant.se.Constants.WriteCode;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.exception.StructureException;
@@ -18,7 +19,7 @@ public class ReferenceDocCallable extends BaseDocCallable {
 	}
 
 	@Override
-	public Integer handle() throws Exception {
+	public WriteCode handle() throws Exception {
 		//
 		// This case is a little more complex -
 		// - We need to insert the base object (upsert)
@@ -26,13 +27,11 @@ public class ReferenceDocCallable extends BaseDocCallable {
 		//
 
 		upsert(id, toMap());
-		upsert(parentId, buildEmptyParent(REF_PREFIX + id));
-
-		return 0;
+		return upsert(parentId, buildEmptyParent(REF_PREFIX + id));
 	}
 
 	@Override
-	protected Map<String, Object> handleConflict() throws StructureException, JsonProcessingException, IOException {
+	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
 		Map<String, Object> fromCloudant = getFromCloudant(parentId);
 		fromCloudant.put(table.nestField, REF_PREFIX + id);
 

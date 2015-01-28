@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.cloudant.se.Constants.WriteCode;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.exception.StructureException;
@@ -18,18 +19,16 @@ public class ParentDocCallable extends BaseDocCallable {
 	}
 
 	@Override
-	public Integer handle() throws Exception {
+	public WriteCode handle() throws Exception {
 		//
 		// This is the simplest case of all - we try to insert it, if it fails, we update from the database
 		//
 
-		upsert(id, toMap());
-
-		return 0;
+		return upsert(id, toMap());
 	}
 
 	@Override
-	protected Map<String, Object> handleConflict() throws StructureException, JsonProcessingException, IOException {
+	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
 		Map<String, Object> fromCloudant = getFromCloudant(id);
 		fromCloudant.putAll(toMap());
 

@@ -12,8 +12,4 @@ public class AppConstants {
 	public enum TransformLanguage {
 		GROOVY, JAVASCRIPT
 	}
-
-	public enum WriteCode {
-		EXCEPTION, INSERT, MAX_ATTEMPTS, UPDATE
-	}
 }
