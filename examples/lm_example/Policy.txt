@@ -1,9 +1,0 @@
-_id	,	ContractRowidObject	,	ContractLastModifiedTimestamp	,	PolicyNumber	,	PolicyEffectiveDate	,	PolicyExpirationDate	,	PolicyState	,	LineOfBusiness	,	ProductTypeCode	,	ContractIdentifier	,	ContractStatusCode	,	ReferralSourceCode	,	PartyContractRoleTypeCode	,	SoftDeleteIndicator	,	SoftDeleteTimestamp
-111	,	88990	,	2010-09-30T01:33+00:00	,	AO23356678810	,	2014-09-30	,	2015-09-30	,	CA	,	AUTO	,		,		,	A	,	CFA	,	Insured	,		,	
-111	,	88991	,	2010-09-30T01:33+00:00	,	H321293993720	,	2014-09-30	,	2015-09-30	,	CA	,	HOME	,		,		,	A	,	CFP	,	Insured	,		,	
-222	,	88992	,	2010-10-31T01:33+00:00	,	AO24664939430	,	2014-09-30	,	2015-09-30	,	MA	,	AUTO	,		,		,	A	,	CFA	,	Insured	,		,	
-222	,	88993	,	2010-10-31T01:33+00:00	,	H147377974777	,	2014-09-30	,	2015-09-30	,	MA	,	HOME	,		,		,	A	,	CFP	,	Insured	,		,	
-333	,	88994	,	2014-09-30T01:33+00:00	,	AO34374973977	,	2014-09-30	,	2015-09-30	,	OH	,	AUTO	,		,		,	A	,	CFI	,	Insured	,		,	
-444	,	88995	,	2013-09-30T01:33+00:00	,	AO34893447774	,	2014-09-30	,	2015-09-30	,	NJ	,	AUTO	,		,		,	A	,	CFI	,	Insured	,		,	
-555	,	88996	,	2011-09-30T01:33+00:00	,	H145377387733	,	2014-09-30	,	2015-09-30	,	NY	,	HOME	,		,		,	A	,	CFP	,	Insured	,		,	
-555	,	88997	,	2010-09-30T01:33+00:00	,	LJ423864644	,	2014-09-30	,	2015-09-30	,	NY	,	LIFE	,		,		,	A	,	LIFE	,	Owner	,		,	

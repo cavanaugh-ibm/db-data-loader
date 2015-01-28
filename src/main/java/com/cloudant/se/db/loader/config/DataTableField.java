@@ -13,12 +13,9 @@ import org.apache.log4j.Logger;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.ektorp.util.Assert;
 
-import sun.org.mozilla.javascript.internal.EvaluatorException;
-
 import com.cloudant.se.db.loader.AppConstants.TransformLanguage;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-@SuppressWarnings("restriction")
 public class DataTableField {
 	@JsonIgnore
 	protected static final Logger	log							= Logger.getLogger(DataTableField.class);
@@ -69,7 +66,7 @@ public class DataTableField {
 				printSetting("outputDateStringTimezone", outputDateStringTimezone);
 			}
 		}
-		
+
 		if (StringUtils.isNotBlank(transformScript)) {
 			try {
 				switch (transformScriptLanguage) {
@@ -98,13 +95,13 @@ public class DataTableField {
 				Assert.isTrue(false, "Script for " + dbFieldName + " must not reference invalid properties - " + e.getProperty());
 			} catch (MultipleCompilationErrorsException e) {
 				Assert.isTrue(false, "Script for " + dbFieldName + " must compile - " + e.getMessage());
-			} catch (EvaluatorException e) {
-				e.printStackTrace();
-				Assert.isTrue(false, "Script for " + dbFieldName + " must compile - " + e.getMessage());
+				// } catch (EvaluatorException e) {
+				// e.printStackTrace();
+				// Assert.isTrue(false, "Script for " + dbFieldName + " must compile - " + e.getMessage());
 			} catch (Exception e) {
 				Assert.isTrue(false, "Script for " + dbFieldName + " must be exception free - " + e.getMessage());
 			}
-			
+
 			printSetting("transformScriptLanguage", transformScriptLanguage);
 			printSetting("transformScript", transformScript);
 		}

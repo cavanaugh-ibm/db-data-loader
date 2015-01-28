@@ -1,7 +1,0 @@
-_id	,	ElectronicAddressRowidObject	,	ElectronicAddressLastModifiedTimestamp	,	ElectronicAddress	,	ElectronicAddressTypeCode	,	SoftDeleteIndicator	,	SoftDeleteTimestamp
-111	,	5571	,	2010-09-30T01:33+00:00	,	Garcia@GMAIL.COM	,	EMAIL	,		,	
-111	,	5576	,	2010-09-30T01:33+00:00	,	GARCIAJ@YAHOO.COM	,	EMAIL	,		,	
-222	,	5572	,	2010-09-30T01:33+00:00	,	Angelo@GMAIL.COM	,	EMAIL	,		,	
-333	,	5573	,	2010-10-31T01:33+00:00	,	Gable@GMAIL.COM	,	EMAIL	,		,	
-444	,	5574	,	2010-10-31T01:33+00:00	,	Moore@GMAIL.COM	,	EMAIL	,		,	
-555	,	5575	,	2014-09-30T01:33+00:00	,	Gatsby@GMAIL.COM	,	EMAIL	,		,	
