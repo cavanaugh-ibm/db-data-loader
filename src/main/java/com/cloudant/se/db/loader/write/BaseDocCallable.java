@@ -80,13 +80,20 @@ public abstract class BaseDocCallable extends CloudantWriter {
 			wc = handle();
 		} catch (NullPointerException e) {
 			e.printStackTrace();
-			System.exit(0);
+			wc = WriteCode.EXCEPTION;
 		} catch (Exception e) {
 			log.error("Error while saving record");
 			wc = WriteCode.EXCEPTION;
 		}
 
-		log.debug(" *** call finished *** ");
+		switch (wc) {
+			case UPDATE:
+			case INSERT:
+				log.debug(" *** call finished with code \"" + wc + "\"*** ");
+				break;
+			default:
+				log.error(" *** call finished with code \"" + wc + "\"*** ");
+		}
 		return wc;
 	}
 
