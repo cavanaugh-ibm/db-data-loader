@@ -24,11 +24,11 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
 
 import com.cloudant.se.Constants.WriteCode;
+import com.cloudant.se.db.exception.StructureException;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.config.DataTableField;
-import com.cloudant.se.db.loader.exception.StructureException;
-import com.cloudant.se.writer.CloudantWriter;
+import com.cloudant.se.db.writer.CloudantWriter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.joestelmach.natty.DateGroup;

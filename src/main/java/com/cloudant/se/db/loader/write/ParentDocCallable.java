@@ -6,9 +6,9 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import com.cloudant.se.Constants.WriteCode;
+import com.cloudant.se.db.exception.StructureException;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
-import com.cloudant.se.db.loader.exception.StructureException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ParentDocCallable extends BaseDocCallable {
