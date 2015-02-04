@@ -40,6 +40,8 @@ public class DataTable {
 	public boolean					useDatabase			= false;
 	public boolean					includeEmpty		= false;
 
+	public boolean					tryCaseNumeric		= false;
+
 	@Override
 	public String toString() {
 		return "DataTable [jsonDocumentType=" + jsonDocumentType + ", idFields=" + idFields + ", useDatabase=" + useDatabase + ", sqlUrl=" + sqlUrl + ", sqlDriver=" + sqlDriver + ", sqlUser="

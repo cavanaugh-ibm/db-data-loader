@@ -124,7 +124,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
 	}
 
 	private void checkForNumberProcessing(FieldInstance f) {
-		if (f.field.isNumericHint) {
+		if (f.table.tryCaseNumeric || f.field.isNumericHint) {
 			//
 			// Logic to attempt number vs. string
 			if (NumberUtils.isNumber(f.value.toString())) {
