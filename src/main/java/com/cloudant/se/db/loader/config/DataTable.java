@@ -6,6 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.util.Assert;
 
+import com.cloudant.se.Constants;
 import com.cloudant.se.db.loader.AppConstants.FileType;
 import com.cloudant.se.db.loader.AppConstants.NestType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -72,9 +73,13 @@ public class DataTable {
 			case PARENT:
 				//
 				// PARENT table records must provide at the very least the idFields
-				Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
+				// Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
 				Assert.hasText(jsonDocumentType, "Must provide the type name for the created document ");
 				Assert.isTrue(StringUtils.equals("_id", uniqueIdField), "For top level documents, the idField must be \"_id\"");
+				if (idFields == null || idFields.size() == 0) {
+					idFields = Sets.newLinkedHashSet();
+					idFields.add(Constants.GENERATED);
+				}
 				printSetting("_id fields", idFields);
 				break;
 			case ARRAY:
