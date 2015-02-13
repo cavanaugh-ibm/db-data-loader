@@ -22,7 +22,9 @@ import javax.script.ScriptEngineManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
+import org.lightcouch.internal.CouchDbUtil;
 
+import com.cloudant.se.Constants;
 import com.cloudant.se.Constants.WriteCode;
 import com.cloudant.se.db.exception.StructureException;
 import com.cloudant.se.db.loader.config.AppConfig;
@@ -299,6 +301,8 @@ public abstract class BaseDocCallable extends CloudantWriter {
 		for (String fieldName : fields) {
 			if (data.containsKey(fieldName.toLowerCase())) {
 				idValues.add(data.get(fieldName.toLowerCase()).value);
+			} else if (StringUtils.equalsIgnoreCase(fieldName, Constants.GENERATED)) {
+				idValues.add(CouchDbUtil.generateUUID());
 			}
 
 			if (deleteFromCurrentRow) {
