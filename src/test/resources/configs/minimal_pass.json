@@ -1,16 +1,17 @@
 {
-  "cloudantAccount" : "XX",
-  "cloudantDatabase" : "yy",
-  "cloudantUser" : "XX",
-  "cloudantPass" : "zz",
-  "tables" : [ {
-    "jsonDocumentType" : "Testing",
-    "idFields" : [ "nId" ],
-    "fileNames" : [ "src/test/resources/x.csv" ],
-    "dataFields" : [ {
-      "dbFieldName" : "nStockPrice",
-      "jsonFieldName" : "Price"
-    } ],
-    "nestType" : "PARENT"
-  } ]
+	"cloudantAccount": "XX",
+	"cloudantDatabase": "yy",
+	"cloudantUser": "XX",
+	"cloudantPass": "zz",
+	"tables": [{
+		"name": "Testing",
+		"jsonDocumentType": "Testing",
+		"idFields": ["nId"],
+		"fileNames": ["src/test/resources/x.csv"],
+		"dataFields": [{
+			"dbFieldName": "nStockPrice",
+			"jsonFieldName": "Price"
+		}],
+		"nestType": "PARENT"
+	}]
 }

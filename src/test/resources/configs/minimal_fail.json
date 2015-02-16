@@ -1,11 +1,12 @@
 {
-  "tables" : [ {
-    "jsonDocumentType" : "Testing",
-    "fileNames" : [ "src/test/resources/x.csv" ],
-    "dataFields" : [ {
-      "dbFieldName" : "nStockPrice",
-      "jsonFieldName" : "Price"
-    } ],
-    "nestType" : "PARENT"
-  } ]
+	"tables": [{
+		"name": "Testing",
+		"jsonDocumentType": "Testing",
+		"fileNames": ["src/test/resources/x.csv"],
+		"dataFields": [{
+			"dbFieldName": "nStockPrice",
+			"jsonFieldName": "Price"
+		}],
+		"nestType": "PARENT"
+	}]
 }

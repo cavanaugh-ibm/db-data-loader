@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
-import org.ektorp.util.Assert;
+import org.springframework.util.Assert;
 
 import com.cloudant.se.db.loader.AppConstants.TransformLanguage;
 import com.fasterxml.jackson.annotation.JsonIgnore;

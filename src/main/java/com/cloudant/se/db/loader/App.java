@@ -129,7 +129,7 @@ public class App {
 		readerExecutor = Executors.newFixedThreadPool(config.tables.size(), new ThreadFactoryBuilder().setNameFormat("ldr-r-%d").build());
 
 		int threads = config.numThreads;
-		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<>(threads * 3);
+		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<Runnable>(threads * 3);
 		ThreadFactory writeThreadFactory = new ThreadFactoryBuilder().setNameFormat("ldr-w-%d").build();
 		writerExecutor = new StatusingThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, writeThreadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
 

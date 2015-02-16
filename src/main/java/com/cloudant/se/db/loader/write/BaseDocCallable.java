@@ -6,11 +6,8 @@ import groovy.lang.MissingPropertyException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +29,9 @@ import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.config.DataTableField;
 import com.cloudant.se.db.writer.CloudantWriter;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
 
@@ -43,7 +42,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
 
 	protected AppConfig						config		= null;
 
-	protected Map<String, FieldInstance>	data		= new LinkedHashMap<>();
+	protected Map<String, FieldInstance>	data		= Maps.newLinkedHashMap();
 	protected String						id			= null;
 	protected Joiner						keyJoiner	= null;
 	protected String						parentId	= null;
@@ -233,7 +232,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
 				throw new StructureException("Structure from the database is not what we expected");
 			}
 		} else {
-			items = new ArrayList<>();
+			items = Lists.newArrayList();
 		}
 
 		//
@@ -265,7 +264,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
 				throw new StructureException("Structure from the database is not what we expected");
 			}
 		} else {
-			items = new ArrayList<>();
+			items = Lists.newArrayList();
 		}
 
 		//
@@ -291,7 +290,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
 	}
 
 	protected String buildIdFrom(Set<String> fields) {
-		Set<Object> idValues = new LinkedHashSet<>();
+		Set<Object> idValues = Sets.newLinkedHashSet();
 		boolean deleteFromCurrentRow = false;
 
 		if (table.idFields.size() == 1) {
@@ -316,7 +315,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
 	protected abstract WriteCode handle() throws Exception;
 
 	protected Map<String, Object> toMap() {
-		Map<String, Object> map = new LinkedHashMap<>();
+		Map<String, Object> map = Maps.newLinkedHashMap();
 		for (FieldInstance f : data.values()) {
 			map.put(f.name, f.value);
 		}

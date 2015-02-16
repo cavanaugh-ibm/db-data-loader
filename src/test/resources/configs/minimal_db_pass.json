@@ -1,19 +1,18 @@
 {
-  "cloudantAccount" : "juniorfoo",
-  "cloudantDatabase" : "db_importer_test",
-  "cloudantUser" : "arealedshowsanowningshey",
-  "cloudantPass" : "sqPdvK4OmVKOCRAYJeEBgUTt",
-  "tables" : [ 
-	  {
-	    "jsonDocumentType" : "Person",
-	    "idFields" : [ "_id" ],
-	    "useDatabase" : true,
-	    "nestType" : "PARENT",
-	    "sqlUrl" : "jdbc:hsqldb:mem:example",
-	    "sqlDriver" : "org.hsqldb.jdbcDriver",
-	    "sqlUser" : "sa",
-	    "sqlPass" : "x",
-	    "sqlQuery" : "select 1 from dual"
-	  }
-  ]
+	"cloudantAccount": "juniorfoo",
+	"cloudantDatabase": "db_importer_test",
+	"cloudantUser": "arealedshowsanowningshey",
+	"cloudantPass": "sqPdvK4OmVKOCRAYJeEBgUTt",
+	"tables": [{
+		"name": "Person",
+		"jsonDocumentType": "Person",
+		"idFields": ["_id"],
+		"useDatabase": true,
+		"nestType": "PARENT",
+		"sqlUrl": "jdbc:hsqldb:mem:example",
+		"sqlDriver": "org.hsqldb.jdbcDriver",
+		"sqlUser": "sa",
+		"sqlPass": "x",
+		"sqlQuery": "select 1 from dual"
+	}]
 }

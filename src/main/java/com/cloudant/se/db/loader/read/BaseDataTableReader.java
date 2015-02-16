@@ -1,7 +1,6 @@
 package com.cloudant.se.db.loader.read;
 
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
@@ -19,6 +18,7 @@ import com.cloudant.se.db.loader.write.NestedDocCallable;
 import com.cloudant.se.db.loader.write.ParentDocCallable;
 import com.cloudant.se.db.loader.write.ReferenceDocArrayCallable;
 import com.cloudant.se.db.loader.write.ReferenceDocCallable;
+import com.google.common.collect.Maps;
 
 /**
  * This class is NOT thread safe
@@ -27,7 +27,7 @@ import com.cloudant.se.db.loader.write.ReferenceDocCallable;
  */
 public abstract class BaseDataTableReader implements Callable<Integer> {
 	protected static final Logger		log				= Logger.getLogger(BaseDataTableReader.class);
-	private Map<String, FieldInstance>	currentRow		= new TreeMap<>();
+	private Map<String, FieldInstance>	currentRow		= Maps.newTreeMap();
 	protected AppConfig					config			= null;
 
 	protected ExecutorService			executor		= null;
