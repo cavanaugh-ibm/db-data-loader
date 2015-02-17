@@ -4,12 +4,9 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Appender;
@@ -21,7 +18,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.model.ConnectOptions;
-import com.cloudant.se.concurrent.StatusingThreadPoolExecutor;
+import com.cloudant.se.concurrent.StatusingNotifyingBlockingThreadPoolExecutor;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.read.BaseDataTableReader;
@@ -116,7 +113,7 @@ public class App {
 			config = null;
 			return -2;
 		} catch (UnrecognizedPropertyException e) {
-			System.err.println("Configuration error detected - unrecognized parameter - typo? - [" + e.getUnrecognizedPropertyName() + "][" + e.getLocation() + "]");
+			System.err.println("Configuration error detected - unrecognized parameter - typo? - [" + e.getPropertyName() + "][" + e.getLocation() + "]");
 			config = null;
 			return -3;
 		} catch (Exception e) {
@@ -129,9 +126,8 @@ public class App {
 		readerExecutor = Executors.newFixedThreadPool(config.tables.size(), new ThreadFactoryBuilder().setNameFormat("ldr-r-%d").build());
 
 		int threads = config.numThreads;
-		BlockingQueue<Runnable> blockingQueue = new LinkedBlockingDeque<Runnable>(threads * 3);
 		ThreadFactory writeThreadFactory = new ThreadFactoryBuilder().setNameFormat("ldr-w-%d").build();
-		writerExecutor = new StatusingThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS, blockingQueue, writeThreadFactory, new ThreadPoolExecutor.CallerRunsPolicy());
+		writerExecutor = new StatusingNotifyingBlockingThreadPoolExecutor(threads, threads * 2, 30, TimeUnit.SECONDS, writeThreadFactory);
 
 		return 0;
 	}
@@ -145,6 +141,8 @@ public class App {
 		try {
 			ConnectOptions options = new ConnectOptions();
 			options.setMaxConnections(config.numThreads);
+			options.setSocketTimeout(config.socketTimeout);
+			options.setConnectionTimeout(config.connectionTimeout);
 
 			config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPass, options);
 			config.database = config.client.database(config.cloudantDatabase, false);

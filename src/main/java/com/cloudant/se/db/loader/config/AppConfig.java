@@ -36,6 +36,9 @@ public class AppConfig {
 
 	public int						maxRetries				= 20;
 	public int						numThreads				= 0;
+	public int						connectionTimeout		= 0;										// In ms
+	public int						socketTimeout			= 0;										// In ms
+
 	public Set<DataTable>			tables					= Sets.newLinkedHashSet();
 
 	public boolean					autoCastDatesToNumbers	= false;

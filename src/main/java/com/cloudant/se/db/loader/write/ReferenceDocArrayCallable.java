@@ -33,7 +33,7 @@ public class ReferenceDocArrayCallable extends BaseDocCallable {
 
 	@Override
 	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
-		Map<String, Object> fromCloudant = getFromCloudant(parentId);
+		Map<String, Object> fromCloudant = get(parentId);
 		addToArrayAt(fromCloudant, table.nestField, REF_PREFIX + id);
 
 		return fromCloudant;

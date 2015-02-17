@@ -29,7 +29,7 @@ public class ParentDocCallable extends BaseDocCallable {
 
 	@Override
 	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
-		Map<String, Object> fromCloudant = getFromCloudant(id);
+		Map<String, Object> fromCloudant = get(id);
 		fromCloudant.putAll(toMap());
 
 		return fromCloudant;

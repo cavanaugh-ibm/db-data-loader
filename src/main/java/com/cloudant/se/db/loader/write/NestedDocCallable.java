@@ -31,7 +31,7 @@ public class NestedDocCallable extends BaseDocCallable {
 
 	@Override
 	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
-		Map<String, Object> fromCloudant = getFromCloudant(parentId);
+		Map<String, Object> fromCloudant = get(parentId);
 		fromCloudant.put(table.nestField, toMap());
 
 		return fromCloudant;
