@@ -36,202 +36,203 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  *
  */
 public class App {
-	private static final Logger	log				= Logger.getLogger(App.class);	;
+    private static final Logger log            = Logger.getLogger(App.class); ;
 
-	protected AppConfig			config			= null;
-	protected AppOptions		options			= null;
+    protected AppConfig         config         = null;
+    protected AppOptions        options        = null;
 
-	protected ExecutorService	readerExecutor	= null;
-	protected ExecutorService	writerExecutor	= null;
+    protected ExecutorService   readerExecutor = null;
+    protected ExecutorService   writerExecutor = null;
 
-	public App() {
-	}
+    public App() {
+    }
 
-	public int config(String[] args) {
-		options = new AppOptions();
-		JCommander jCommander = new JCommander();
-		jCommander.setProgramName("Cloudandt \"Relational Database\" Import Utility");
-		jCommander.addObject(options);
+    public int config(String[] args) {
+        options = new AppOptions();
+        JCommander jCommander = new JCommander();
+        jCommander.setProgramName("Cloudandt \"Relational Database\" Import Utility");
+        jCommander.addObject(options);
 
-		//
-		// Try to parse the options we were given
-		try {
-			jCommander.parse(args);
-		} catch (ParameterException e) {
-			showUsage(jCommander);
-			return 1;
-		}
+        //
+        // Try to parse the options we were given
+        try {
+            jCommander.parse(args);
+        } catch (ParameterException e) {
+            showUsage(jCommander);
+            return 1;
+        }
 
-		//
-		// Show the help if they asked for it
-		if (options.help) {
-			showUsage(jCommander);
-			return 2;
-		}
+        //
+        // Show the help if they asked for it
+        if (options.help) {
+            showUsage(jCommander);
+            return 2;
+        }
 
-		//
-		// Enable debugging if asked
-		if (options.verbose > 0) {
-			// Logger.getRootLogger().setLevel(Level.DEBUG);
-			if (options.verbose >= 1) {
-				Logger.getLogger("com.cloudant").setLevel(Level.DEBUG);
-			}
-			if (options.verbose >= 2) {
-				Logger.getLogger("org.lightcouch").setLevel(Level.DEBUG);
-			}
-			if (options.verbose >= 3) {
-				Logger.getLogger("org.apache.http").setLevel(Level.DEBUG);
-			}
-		}
+        //
+        // Enable debugging if asked
+        if (options.verbose > 0) {
+            // Logger.getRootLogger().setLevel(Level.DEBUG);
+            if (options.verbose >= 1) {
+                Logger.getLogger("com.cloudant").setLevel(Level.DEBUG);
+            }
+            if (options.verbose >= 2) {
+                Logger.getLogger("org.lightcouch").setLevel(Level.DEBUG);
+            }
+            if (options.verbose >= 3) {
+                Logger.getLogger("org.apache.http").setLevel(Level.DEBUG);
+            }
+        }
 
-		//
-		// Enable tracing if asked
-		if (options.traceRead) {
-			Logger.getLogger(BaseDataTableReader.class.getPackage().getName()).setLevel(Level.TRACE);
-		}
-		if (options.traceWrite) {
-			Logger.getLogger(BaseDocCallable.class.getPackage().getName()).setLevel(Level.TRACE);
-		}
+        //
+        // Enable tracing if asked
+        if (options.traceRead) {
+            Logger.getLogger(BaseDataTableReader.class.getPackage().getName()).setLevel(Level.TRACE);
+        }
+        if (options.traceWrite) {
+            Logger.getLogger(BaseDocCallable.class.getPackage().getName()).setLevel(Level.TRACE);
+        }
 
-		//
-		// Read the config they gave us
-		try {
-			//
-			// Read the configuration from our file and let it validate itself
-			ObjectMapper mapper = new ObjectMapper();
-			File configFile = new File(options.configFileName);
-			config = mapper.readValue(configFile, AppConfig.class);
-			config.defaultDirectory = configFile.getParentFile() != null ? configFile.getParentFile() : new File(".");
-			config.validate();
+        //
+        // Read the config they gave us
+        try {
+            //
+            // Read the configuration from our file and let it validate itself
+            ObjectMapper mapper = new ObjectMapper();
+            File configFile = new File(options.configFileName);
+            config = mapper.readValue(configFile, AppConfig.class);
+            config.defaultDirectory = configFile.getParentFile() != null ? configFile.getParentFile() : new File(".");
+            config.mergeOptions(options);
+            config.validate();
 
-			//
-			// Print out a sample of what the output JSON documents will look like will look like
-			// TODO
-			// config.printSample();
-		} catch (IllegalArgumentException e) {
-			System.err.println("Configuration error detected - " + e.getMessage());
-			config = null;
-			return -2;
-		} catch (UnrecognizedPropertyException e) {
-			System.err.println("Configuration error detected - unrecognized parameter - typo? - [" + e.getPropertyName() + "][" + e.getLocation() + "]");
-			config = null;
-			return -3;
-		} catch (Exception e) {
-			System.err.println("Unexpected exception - see log for details - " + e.getMessage());
-			log.error(e.getMessage(), e);
-			return -1;
-		}
-		//
-		// Setup our executor service
-		readerExecutor = Executors.newFixedThreadPool(config.tables.size(), new ThreadFactoryBuilder().setNameFormat("ldr-r-%d").build());
+            //
+            // Print out a sample of what the output JSON documents will look like will look like
+            // TODO
+            // config.printSample();
+        } catch (IllegalArgumentException e) {
+            System.err.println("Configuration error detected - " + e.getMessage());
+            config = null;
+            return -2;
+        } catch (UnrecognizedPropertyException e) {
+            System.err.println("Configuration error detected - unrecognized parameter - typo? - [" + e.getPropertyName() + "][" + e.getLocation() + "]");
+            config = null;
+            return -3;
+        } catch (Exception e) {
+            System.err.println("Unexpected exception - see log for details - " + e.getMessage());
+            log.error(e.getMessage(), e);
+            return -1;
+        }
+        //
+        // Setup our executor service
+        readerExecutor = Executors.newFixedThreadPool(config.tables.size(), new ThreadFactoryBuilder().setNameFormat("ldr-r-%d").build());
 
-		int threads = config.numThreads;
-		ThreadFactory writeThreadFactory = new ThreadFactoryBuilder().setNameFormat("ldr-w-%d").build();
-		writerExecutor = new StatusingNotifyingBlockingThreadPoolExecutor(threads, threads * 2, 30, TimeUnit.SECONDS, writeThreadFactory);
+        int threads = config.numThreads;
+        ThreadFactory writeThreadFactory = new ThreadFactoryBuilder().setNameFormat("ldr-w-%d").build();
+        writerExecutor = new StatusingNotifyingBlockingThreadPoolExecutor(threads, threads * 2, 30, TimeUnit.SECONDS, writeThreadFactory);
 
-		return 0;
-	}
+        return 0;
+    }
 
-	private void showUsage(JCommander jCommander) {
-		jCommander.usage();
-	}
+    private void showUsage(JCommander jCommander) {
+        jCommander.usage();
+    }
 
-	private int start() {
-		log.info("Configuration complete, starting up");
-		try {
-			ConnectOptions options = new ConnectOptions();
-			options.setMaxConnections(config.numThreads);
-			options.setSocketTimeout(config.socketTimeout);
-			options.setConnectionTimeout(config.connectionTimeout);
+    private int start() {
+        log.info("Configuration complete, starting up");
+        try {
+            ConnectOptions options = new ConnectOptions();
+            options.setMaxConnections(config.numThreads);
+            options.setSocketTimeout(config.socketTimeout);
+            options.setConnectionTimeout(config.connectionTimeout);
 
-			config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPass, options);
-			config.database = config.client.database(config.cloudantDatabase, false);
-			log.info(" --- Connected to Cloudant --- ");
-			// log.debug("Available databases - " + config.client.getAllDbs());
-			// log.debug("Database shards - " + config.database.getShards().size());
-		} catch (Exception e) {
-			log.fatal("Unable to connect to the database", e);
-			return -4;
-		}
+            config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPassword, options);
+            config.database = config.client.database(config.cloudantDatabase, false);
+            log.info(" --- Connected to Cloudant --- ");
+            // log.debug("Available databases - " + config.client.getAllDbs());
+            // log.debug("Database shards - " + config.database.getShards().size());
+        } catch (Exception e) {
+            log.fatal("Unable to connect to the database", e);
+            return -4;
+        }
 
-		try {
-			for (DataTable table : config.tables) {
-				if (table.useDatabase) {
-					log.info("Submitting SQL DB reader for " + table.sqlQuery);
-					readerExecutor.submit(new SqlDataTableReader(config, table, writerExecutor));
-				} else {
-					switch (table.fileType) {
-						case CSV:
-							log.info("Submitting CSV file reader for " + table.fileNames);
-							readerExecutor.submit(new CsvDataTableReader(config, table, writerExecutor));
-							break;
-						case JSON:
-						case XML:
-						default:
-							log.fatal("Files of type " + table.fileType + " are not supported yet");
-							return 3;
-					}
-				}
-			}
-		} catch (Exception e) {
-			log.fatal("Unexpected exception", e);
-			return -1;
-		}
+        try {
+            for (DataTable table : config.tables) {
+                if (table.useDatabase) {
+                    log.info("Submitting SQL DB reader for " + table.sqlQuery);
+                    readerExecutor.submit(new SqlDataTableReader(config, table, writerExecutor));
+                } else {
+                    switch (table.fileType) {
+                        case CSV:
+                            log.info("Submitting CSV file reader for " + table.fileNames);
+                            readerExecutor.submit(new CsvDataTableReader(config, table, writerExecutor));
+                            break;
+                        case JSON:
+                        case XML:
+                        default:
+                            log.fatal("Files of type " + table.fileType + " are not supported yet");
+                            return 3;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.fatal("Unexpected exception", e);
+            return -1;
+        }
 
-		try {
-			//
-			// Be careful with the order you shutdown the pools because you may shutdown the writer pool before the reader has finished adding items in
-			log.info("All readers have been scheduled, waiting for completion");
-			readerExecutor.shutdown();
-			readerExecutor.awaitTermination(1, TimeUnit.DAYS);
-			log.info("All readers have completed");
+        try {
+            //
+            // Be careful with the order you shutdown the pools because you may shutdown the writer pool before the reader has finished adding items in
+            log.info("All readers have been scheduled, waiting for completion");
+            readerExecutor.shutdown();
+            readerExecutor.awaitTermination(1, TimeUnit.DAYS);
+            log.info("All readers have completed");
 
-			log.info("Waiting for writers to complete");
-			writerExecutor.shutdown();
-			writerExecutor.awaitTermination(1, TimeUnit.DAYS);
-			log.info("All writers have completed");
-		} catch (InterruptedException e) {
-		}
+            log.info("Waiting for writers to complete");
+            writerExecutor.shutdown();
+            writerExecutor.awaitTermination(1, TimeUnit.DAYS);
+            log.info("All writers have completed");
+        } catch (InterruptedException e) {
+        }
 
-		log.info("App complete, shutting down");
-		return 0;
-	}
+        log.info("App complete, shutting down");
+        return 0;
+    }
 
-	public static void main(String[] args)
-	{
-		initLoggers();
-		App app = new App();
-		int configReturnCode = app.config(args);
-		switch (configReturnCode) {
-			case 0:
-				// config worked, user accepted design
-				System.exit(app.start());
-				break;
-			default:
-				// config did NOT work, error out
-				System.exit(configReturnCode);
-				break;
-		}
-	}
+    public static void main(String[] args)
+    {
+        initLoggers();
+        App app = new App();
+        int configReturnCode = app.config(args);
+        switch (configReturnCode) {
+            case 0:
+                // config worked, user accepted design
+                System.exit(app.start());
+                break;
+            default:
+                // config did NOT work, error out
+                System.exit(configReturnCode);
+                break;
+        }
+    }
 
-	private static void initLoggers() {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    private static void initLoggers() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
-		Logger rootLogger = Logger.getRootLogger();
-		Enumeration<?> appenders = rootLogger.getAllAppenders();
-		FileAppender fa = null;
-		while (appenders.hasMoreElements())
-		{
-			Appender currAppender = (Appender) appenders.nextElement();
-			if (currAppender instanceof FileAppender)
-			{
-				fa = (FileAppender) currAppender;
-			}
-		}
-		if (fa != null)
-		{
-			fa.setFile("load-" + dateFormat.format(new Date()) + ".log");
-			fa.activateOptions();
-		}
-	}
+        Logger rootLogger = Logger.getRootLogger();
+        Enumeration<?> appenders = rootLogger.getAllAppenders();
+        FileAppender fa = null;
+        while (appenders.hasMoreElements())
+        {
+            Appender currAppender = (Appender) appenders.nextElement();
+            if (currAppender instanceof FileAppender)
+            {
+                fa = (FileAppender) currAppender;
+            }
+        }
+        if (fa != null)
+        {
+            fa.setFile("load-" + dateFormat.format(new Date()) + ".log");
+            fa.activateOptions();
+        }
+    }
 }

@@ -1,8 +1,8 @@
 {
-	"cloudantAccount": "XX",
-	"cloudantDatabase": "yy",
-	"cloudantUser": "XX",
-	"cloudantPass": "zz",
+	"cloudantAccount": "config_account",
+	"cloudantDatabase": "config_database",
+	"cloudantUser": "config_user",
+	"cloudantPassword": "config_password",
 	"tables": [{
 		"name": "Testing",
 		"jsonDocumentType": "Testing",

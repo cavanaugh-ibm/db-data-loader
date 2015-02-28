@@ -1,8 +1,8 @@
 {
 	"cloudantAccount": "juniorfoo",
 	"cloudantDatabase": "db_importer_test",
-	"cloudantUser": "arealedshowsanowningshey",
-	"cloudantPass": "sqPdvK4OmVKOCRAYJeEBgUTt",
+	"cloudantUser": "xx",
+	"cloudantPassword": "xx",
 	"tables": [{
 		"name": "Person",
 		"jsonDocumentType": "Person",
