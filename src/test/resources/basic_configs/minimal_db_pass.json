@@ -6,9 +6,9 @@
 	"tables": [{
 		"name": "Person",
 		"jsonDocumentType": "Person",
-		"idFields": ["_id"],
+		"dbIdFields": ["_id"],
 		"useDatabase": true,
-		"nestType": "PARENT",
+		"jsonNestType": "PARENT",
 		"sqlUrl": "jdbc:hsqldb:mem:example",
 		"sqlDriver": "org.hsqldb.jdbcDriver",
 		"sqlUser": "sa",

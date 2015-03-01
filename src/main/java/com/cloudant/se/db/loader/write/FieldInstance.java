@@ -4,20 +4,37 @@ import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.config.DataTableField;
 
 public class FieldInstance {
-	public DataTable		table;
-	public DataTableField	field;
-	public String			name;
-	public Object			value;
+    private DataTableField field;
+    private DataTable      table;
+    private Object         value;
 
-	public FieldInstance(String name, Object value, DataTableField field, DataTable table) {
-		this.name = name;
-		this.value = value;
-		this.field = field;
-		this.table = table;
-	}
+    public FieldInstance(Object value, DataTableField field, DataTable table) {
+        this.setValue(value);
+        this.setField(field);
+        this.setTable(table);
+    }
 
-	@Override
-	public String toString() {
-		return "FieldInstance [name=" + name + ", value=" + value + ", field=" + field + "]\n";
-	}
+    public DataTableField getField() {
+        return field;
+    }
+
+    public DataTable getTable() {
+        return table;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setField(DataTableField field) {
+        this.field = field;
+    }
+
+    public void setTable(DataTable table) {
+        this.table = table;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
 }

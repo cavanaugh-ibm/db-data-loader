@@ -1,23 +1,11 @@
 package com.cloudant.se.db.loader.write;
 
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.lang.MissingPropertyException;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.lightcouch.internal.CouchDbUtil;
 
@@ -32,296 +20,214 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.joestelmach.natty.DateGroup;
-import com.joestelmach.natty.Parser;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 public abstract class BaseDocCallable extends CloudantWriter {
-	protected static final Logger			log			= Logger.getLogger(BaseDocCallable.class);
-	protected static final String			REF_PREFIX	= "@";
-	protected static final String			DOC_TYPE	= "DocumentType";
+    protected static final String         DOC_TYPE       = "DocumentType";
+    protected static final DataTableField DOC_TYPE_FIELD = new DataTableField(DOC_TYPE);
+    protected static final Logger         log            = Logger.getLogger(BaseDocCallable.class);
+    protected static final String         REF_PREFIX     = "@";
 
-	protected AppConfig						config		= null;
+    protected AppConfig                   config         = null;
 
-	protected Map<String, FieldInstance>	data		= Maps.newLinkedHashMap();
-	protected String						id			= null;
-	protected Joiner						keyJoiner	= null;
-	protected String						parentId	= null;
-	protected DataTable						table		= null;
+    protected Map<String, FieldInstance>  data           = Maps.newLinkedHashMap();
+    protected String                      id             = null;
+    protected Joiner                      keyJoiner      = null;
+    protected String                      parentId       = null;
+    protected DataTable                   table          = null;
 
-	public BaseDocCallable(AppConfig config, DataTable table) {
-		super(config.database);
+    public BaseDocCallable(AppConfig config, DataTable table) {
+        super(config.database);
 
-		this.config = config;
-		this.table = table;
+        this.config = config;
+        this.table = table;
 
-		this.keyJoiner = Joiner.on(config.concatinationChar).skipNulls();
-	}
+        this.keyJoiner = Joiner.on(config.getConcatinationChar()).skipNulls();
+    }
 
-	public void addFields(Map<String, FieldInstance> currentRow) {
-		data.putAll(currentRow);
-	}
+    public void addFields(Map<String, FieldInstance> currentRow) {
+        data.putAll(currentRow);
+    }
 
-	@Override
-	public final WriteCode call() throws Exception {
-		log.debug(" *** call starting *** ");
+    @Override
+    public final WriteCode call() throws Exception {
+        log.debug(" *** call starting *** ");
 
-		WriteCode wc = null;
-		try {
-			addDocumentType();
+        WriteCode wc = null;
+        try {
+            //
+            // Add in a document type discriminator
+            data.put(DOC_TYPE, new FieldInstance(table.getJsonDocumentType(), DOC_TYPE_FIELD, table));
 
-			this.id = buildIdFrom(table.idFields);
-			this.parentId = buildIdFrom(table.parentIdFields);
+            //
+            // Figure out what our IDs are {id/parentid}
+            buildAndSetId();
+            buildAndSetParentId();
 
-			//
-			// Process the individual fields (numbers, dates, scripts)
-			processFields();
+            //
+            // Process the individual fields (numbers, dates, scripts)
+            processFields();
 
-			//
-			// Give to the implementer to handle
-			wc = handle();
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-			wc = WriteCode.EXCEPTION;
-		} catch (Exception e) {
-			log.error("Error while saving record");
-			wc = WriteCode.EXCEPTION;
-		}
+            //
+            // Give to the implementer to handle
+            wc = handle();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            wc = WriteCode.EXCEPTION;
+        } catch (Exception e) {
+            log.error("Error while saving record");
+            wc = WriteCode.EXCEPTION;
+        }
 
-		switch (wc) {
-			case UPDATE:
-			case INSERT:
-				log.debug(" *** call finished with code \"" + wc + "\"*** ");
-				break;
-			default:
-				log.error(" *** call finished with code \"" + wc + "\"*** ");
-		}
-		return wc;
-	}
+        switch (wc) {
+            case UPDATE:
+            case INSERT:
+                log.debug(" *** call finished with code \"" + wc + "\"*** ");
+                break;
+            default:
+                log.error(" *** call finished with code \"" + wc + "\"*** ");
+        }
+        return wc;
+    }
 
-	private void addDocumentType() {
-		DataTableField docTypeField = new DataTableField();
-		docTypeField.dbFieldName = DOC_TYPE;
-		docTypeField.jsonFieldName = DOC_TYPE;
+    @SuppressWarnings("unchecked")
+    public Map<String, FieldInstance> getData() {
+        return Collections.unmodifiableMap(data);
+    }
 
-		data.put(DOC_TYPE, new FieldInstance(DOC_TYPE, table.jsonDocumentType, docTypeField, table));
-	}
+    protected void addObjectToArray(Map<String, Object> source, Map<String, Object> newData) throws StructureException {
+        //
+        // These two methods exist like this to facilitate testing
+        addObjectToArray(source, table.getJsonNestField(), table.getJsonUniqueIdField(), id, newData);
+    }
 
-	private void checkForDateProcessing(FieldInstance f) {
-		if (f.field.isDate) {
-			//
-			// Logic to attempt date conversion (explicitly told to try date processing for this field)
-			Object newValue = convertDate(f.field.outputNumber, f.field.outputString, f.field.outputDateStringFormat, f.field.outputDateStringTimezone, f.value.toString());
-			log.trace("[id=" + id + "] - " + f.field.dbFieldName + " - Casting - date - " + f.value + " --> " + newValue);
-			f.value = newValue;
-		} else if (!f.field.isNotDate
-				&& (config.autoCastDatesToNumbers || config.autoCastDatesToStrings)
-				&& (f.field.dbFieldName.toLowerCase().endsWith("timestamp") || f.field.dbFieldName.toLowerCase().endsWith("date"))) {
-			//
-			// Logic to attempt date conversion based on naming
-			Object newValue = convertDate(config.autoCastDatesToNumbers, config.autoCastDatesToStrings, config.autoCastDatesFormat, config.autoCastDatesTimezone, f.value.toString());
-			log.trace("[id=" + id + "] - " + f.field.dbFieldName + " - Casting - date - " + f.value + " --> " + newValue);
-			f.value = newValue;
-		}
-	}
+    @SuppressWarnings("unchecked")
+    protected void addObjectToArray(Map<String, Object> source, String nestField, String uniqueIdField, String newId, Map<String, Object> newData) throws StructureException {
+        List<Map<String, Object>> items = null;
 
-	private void checkForNumberProcessing(FieldInstance f) {
-		if (f.table.tryCaseNumeric || f.field.isNumericHint) {
-			//
-			// Logic to attempt number vs. string
-			if (NumberUtils.isNumber(f.value.toString())) {
-				try {
-					f.value = NumberUtils.createNumber(f.value.toString());
-				} catch (NumberFormatException e) {
-				}
-			}
-		}
-	}
+        if (source.containsKey(nestField)) {
+            Object nestFieldObject = source.get(nestField);
 
-	private void checkForScriptProcessing(FieldInstance f) {
-		if (StringUtils.isNotBlank(f.field.transformScript)) {
-			log.trace("[id=" + id + "] - " + f.name + " - Transformation script not blank");
-			try {
-				Object output = null;
-				log.trace("[id=" + id + "] - " + f.name + " - Transformation - type - " + f.field.transformScriptLanguage);
-				log.trace("[id=" + id + "] - " + f.name + " - Transformation - script - " + f.field.transformScript);
+            if (nestFieldObject instanceof List) {
+                items = (List<Map<String, Object>>) source.get(nestField);
+            } else {
+                throw new StructureException("Structure from the database is not what we expected");
+            }
+        } else {
+            items = Lists.newArrayList();
+        }
 
-				switch (f.field.transformScriptLanguage) {
-					case GROOVY:
-						Binding binding = new Binding();
-						binding.setVariable("input", f.value);
-						GroovyShell shell = new GroovyShell(binding);
+        //
+        // Make sure the array does not have it already
+        for (Iterator<Map<String, Object>> iter = items.iterator(); iter.hasNext();) {
+            Map<String, Object> item = iter.next();
 
-						output = shell.evaluate(f.field.transformScript);
-						log.trace("[id=" + id + "] - " + f.name + " - Transformation - output - " + f.value + " --> " + output);
-						f.value = output == null ? null : output.toString();
-						break;
-					case JAVASCRIPT:
-						ScriptEngineManager factory = new ScriptEngineManager();
-						ScriptEngine engine = factory.getEngineByName("JavaScript");
-						engine.put("input", f.value);
+            if (item.containsKey(uniqueIdField)) {
+                if (item.get(uniqueIdField).equals(newId)) {
+                    iter.remove();
+                }
+            }
+        }
 
-						output = engine.eval(f.field.transformScript);
-						log.trace("[id=" + id + "] - " + f.name + " - Transformation - output - " + f.value + " --> " + output);
-						f.value = output == null ? null : output.toString();
-						break;
-					default:
-						break;
-				}
-			} catch (MissingPropertyException e) {
-				log.warn(f.name + " - Transformation error - script references an unknown property - " + e.getProperty());
-			} catch (Exception e) {
-				System.out.println(e.getClass());
-				log.warn(f.name + " - Transformation error - " + e.getMessage());
-			}
-		}
-	}
+        items.add(newData);
+        source.put(nestField, items);
+    }
 
-	private Object convertDate(boolean outputNumber, boolean outputDate, String outDateFormat, String outDateTimezone, String value) {
-		Parser parser = new Parser();
-		List<DateGroup> groups = parser.parse(value);
-		if (groups.size() == 1) {
-			List<Date> dates = groups.get(0).getDates();
-			if (dates.size() == 1) {
-				//
-				// We were able to parse the date down to a single date and a single group, use its
-				if (outputNumber) {
-					//
-					// Requested it as a number
-					return dates.get(0).getTime();
-				} else if (outputDate) {
-					//
-					// Requested it as a string
-					DateFormat dateFormat = new SimpleDateFormat(outDateFormat);
-					dateFormat.setTimeZone(TimeZone.getTimeZone(outDateTimezone));
-					return dateFormat.format(dates.get(0));
-				}
-			}
-		}
+    @SuppressWarnings("unchecked")
+    protected void addStringToArray(Map<String, Object> source, String field, String newData) throws StructureException {
+        List<String> items = null;
 
-		//
-		// We were not able to pare the date with enough confidence, keep the original
-		return value;
-	}
+        if (source.containsKey(table.getJsonNestField())) {
+            Object nestField = source.get(table.getJsonNestField());
 
-	private void processFields() {
-		for (FieldInstance f : data.values()) {
-			checkForNumberProcessing(f);
-			checkForDateProcessing(f);
-			checkForScriptProcessing(f);
+            if (nestField instanceof List) {
+                items = (List<String>) source.get(table.getJsonNestField());
+            } else {
+                throw new StructureException("Structure from the database is not what we expected");
+            }
+        } else {
+            items = Lists.newArrayList();
+        }
 
-			//
-			// Check for empty fields
-			if (!f.table.includeEmpty) {
-				if (f.value != null && StringUtils.isBlank(f.value.toString())) {
-					f.value = null;
-				}
-			}
-		}
-	}
+        //
+        // Make sure the array does not have it already
+        for (Iterator<String> iter = items.iterator(); iter.hasNext();) {
+            String item = iter.next();
 
-	@SuppressWarnings("unchecked")
-	protected void addToArrayAt(Map<String, Object> source, String field, Map<String, Object> newData) throws StructureException {
-		List<Map<String, Object>> items = null;
+            if (StringUtils.equals(item, newData)) {
+                iter.remove();
+            }
+        }
 
-		if (source.containsKey(table.nestField)) {
-			Object nestField = source.get(table.nestField);
+        items.add(newData);
+        source.put(field, items);
+    }
 
-			if (nestField instanceof List) {
-				items = (List<Map<String, Object>>) source.get(table.nestField);
-			} else {
-				throw new StructureException("Structure from the database is not what we expected");
-			}
-		} else {
-			items = Lists.newArrayList();
-		}
+    protected void buildAndSetId() {
+        this.id = buildIdFrom(table.getDbIdFields());
+    }
 
-		//
-		// Make sure the array does not have it already
-		for (Iterator<Map<String, Object>> iter = items.iterator(); iter.hasNext();) {
-			Map<String, Object> item = iter.next();
+    protected void buildAndSetParentId() {
+        this.parentId = buildIdFrom(table.getDbParentIdFields());
+    }
 
-			if (item.containsKey(table.uniqueIdField)) {
-				if (item.get(table.uniqueIdField).equals(id)) {
-					iter.remove();
-				}
-			}
-		}
+    protected Map<String, Object> buildEmptyParent(Object nestedObject) {
+        Map<String, Object> newMap = Maps.newHashMap();
+        newMap.put("_id", parentId);
+        newMap.put(table.getJsonNestField(), nestedObject);
 
-		items.add(newData);
-		source.put(field, items);
-	}
+        return newMap;
+    }
 
-	@SuppressWarnings("unchecked")
-	protected void addToArrayAt(Map<String, Object> source, String field, String newData) throws StructureException {
-		List<String> items = null;
+    protected String buildIdFrom(Set<String> fields) {
+        Set<Object> idValues = Sets.newLinkedHashSet();
+        boolean deleteFromCurrentRow = false;
 
-		if (source.containsKey(table.nestField)) {
-			Object nestField = source.get(table.nestField);
+        if (table.getDbIdFields().size() == 1) {
+            deleteFromCurrentRow = true;
+        }
 
-			if (nestField instanceof List) {
-				items = (List<String>) source.get(table.nestField);
-			} else {
-				throw new StructureException("Structure from the database is not what we expected");
-			}
-		} else {
-			items = Lists.newArrayList();
-		}
+        for (String fieldName : fields) {
+            if (data.containsKey(fieldName.toLowerCase())) {
+                idValues.add(data.get(fieldName.toLowerCase()).getValue());
+            } else if (StringUtils.equalsIgnoreCase(fieldName, Constants.GENERATED)) {
+                idValues.add(CouchDbUtil.generateUUID());
+            }
 
-		//
-		// Make sure the array does not have it already
-		for (Iterator<String> iter = items.iterator(); iter.hasNext();) {
-			String item = iter.next();
+            if (deleteFromCurrentRow) {
+                data.remove(fieldName.toLowerCase());
+            }
+        }
 
-			if (StringUtils.equals(item, newData)) {
-				iter.remove();
-			}
-		}
+        return keyJoiner.join(idValues);
+    }
 
-		items.add(newData);
-		source.put(field, items);
-	}
+    protected abstract WriteCode handle() throws Exception;
 
-	protected Map<String, Object> buildEmptyParent(Object nestedObject) {
-		Map<String, Object> newMap = Maps.newHashMap();
-		newMap.put("_id", parentId);
-		newMap.put(table.nestField, nestedObject);
+    protected void processFields() {
+        for (FieldInstance f : data.values()) {
+            f.getField().applyScripting(id, f);
+            f.getField().applyConversions(id, f);
 
-		return newMap;
-	}
+            //
+            // Check for empty fields and null them out - JSON will drop them for us
+            if (!f.getTable().isJsonIncludeEmpty()) {
+                if (f.getValue() != null && StringUtils.isBlank(f.getValue().toString())) {
+                    f.setValue(null);
+                }
+            }
+        }
+    }
 
-	protected String buildIdFrom(Set<String> fields) {
-		Set<Object> idValues = Sets.newLinkedHashSet();
-		boolean deleteFromCurrentRow = false;
+    protected Map<String, Object> toMap() {
+        Map<String, Object> map = Maps.newLinkedHashMap();
+        for (FieldInstance f : data.values()) {
+            map.put(f.getField().getDbFieldName(), f.getValue());
+        }
 
-		if (table.idFields.size() == 1) {
-			deleteFromCurrentRow = true;
-		}
+        map.put(table.getJsonUniqueIdField(), id);
 
-		for (String fieldName : fields) {
-			if (data.containsKey(fieldName.toLowerCase())) {
-				idValues.add(data.get(fieldName.toLowerCase()).value);
-			} else if (StringUtils.equalsIgnoreCase(fieldName, Constants.GENERATED)) {
-				idValues.add(CouchDbUtil.generateUUID());
-			}
-
-			if (deleteFromCurrentRow) {
-				data.remove(fieldName.toLowerCase());
-			}
-		}
-
-		return keyJoiner.join(idValues);
-	}
-
-	protected abstract WriteCode handle() throws Exception;
-
-	protected Map<String, Object> toMap() {
-		Map<String, Object> map = Maps.newLinkedHashMap();
-		for (FieldInstance f : data.values()) {
-			map.put(f.name, f.value);
-		}
-
-		map.put(table.uniqueIdField, id);
-
-		return map;
-	}
+        return map;
+    }
 }

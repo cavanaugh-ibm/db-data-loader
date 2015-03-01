@@ -23,51 +23,51 @@ public class AppConfigTest {
 
     @Test
     public void testValidate() {
-        File folder = new File("src/test/resources/configs");
+        File folder = new File("src/test/resources/basic_configs");
         File[] listOfFiles = folder.listFiles();
         ObjectMapper mapper = new ObjectMapper();
 
-        for (File listOfFile : listOfFiles) {
-            if (listOfFile.isFile()) {
+        for (File file : listOfFiles) {
+            if (file.isFile()) {
                 try {
-                    AppConfig config = mapper.readValue(listOfFile, AppConfig.class);
-                    if (listOfFile.getName().toUpperCase().endsWith("_PASS.JSON")) {
+                    AppConfig config = mapper.readValue(file, AppConfig.class);
+                    if (file.getName().toUpperCase().endsWith("_PASS.JSON")) {
                         try {
                             config.validate();
                         } catch (IllegalArgumentException e) {
-                            fail("Should have passed - \"" + listOfFile + "\" - " + e.getMessage());
+                            fail("Should have passed - \"" + file + "\" - " + e.getMessage());
                         }
-                    } else if (listOfFile.getName().toUpperCase().endsWith("_FAIL.JSON")) {
+                    } else if (file.getName().toUpperCase().endsWith("_FAIL.JSON")) {
                         try {
                             config.validate();
-                            fail("Should have errored - \"" + listOfFile + "\"");
+                            fail("Should have errored - \"" + file + "\"");
                         } catch (IllegalArgumentException e) {
                         }
                     } else {
                         try {
                             config.validate();
                         } catch (IllegalArgumentException e) {
-                            fail("Could not determine desired pass/fail from name but it failed - \"" + listOfFile + "\" - " + e.getMessage());
+                            fail("Could not determine desired pass/fail from name but it failed - \"" + file + "\" - " + e.getMessage());
                         }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    fail("Error reading/parsing - \"" + listOfFile + "\" - " + e.getMessage());
+                    fail("Error reading/parsing - \"" + file + "\" - " + e.getMessage());
                 }
             }
         }
     }
 
     private void checkVars(AppConfig config, String account, String db, String user, String password) {
-        assertEquals(account, config.cloudantAccount);
-        assertEquals(db, config.cloudantDatabase);
-        assertEquals(user, config.cloudantUser);
-        assertEquals(password, config.cloudantPassword);
+        assertEquals(account, config.getCloudantAccount());
+        assertEquals(db, config.getCloudantDatabase());
+        assertEquals(user, config.getCloudantUser());
+        assertEquals(password, config.getCloudantPassword());
     }
 
     private void doTestVars(String propAccount, String propDatabase, String propUser, String propPassword, String expectedAccount, String expectedDatabase, String expectedUser, String expectedPassword) {
         ObjectMapper mapper = new ObjectMapper();
-        File configFile = new File("src/test/resources/configs/minimal_pass.json");
+        File configFile = new File("src/test/resources/basic_configs/minimal_pass.json");
         AppConfig config = null;
 
         try {

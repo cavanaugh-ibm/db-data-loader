@@ -22,9 +22,8 @@ cloudant.database.prefix=prefix for test database that will be created/destroyed
 Once all the required properties are provided in the properties file run `com.cloudant.test.com.cloudant.se.LoaderTestSuite` test class.
 
 ## Open Tasks
-* json schema or yaml for configuration?
 * Migrate in the loader
-* Fix packaging so it brings in the proper loader
+* Fix packaging so it brings in the proper logging
 * Add flag to specify the log location
 * Add flag to supress stdout
 * For file loader, add flag to merge or replace
@@ -33,6 +32,7 @@ Once all the required properties are provided in the properties file run `com.cl
 
 ## Completed Tasks
 * Add logic to read cloudant {password/user/account/database} from {prompt/-D/config}
+* json schema for configuration?
 
 ## License
 

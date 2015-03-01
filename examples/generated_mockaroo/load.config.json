@@ -1,0 +1,45 @@
+{
+	"numThreads": 200,
+	"connectionTimeout": 60000,
+	"socketTimeout": 30000,
+	"cloudantDatabase": "db_importer_test_small",
+	"tables": [{
+		"name": "Person",
+		"fileNames": ["Person.csv"],
+		"dbIdFields": ["_id"],
+		"jsonDocumentType": "Person",
+		"jsonNestType": "PARENT",
+		"jsonIncludeEmpty": false,
+		"dataFields": [{
+			"dbFieldName": "LastFourSsn",
+			"jsonType": "NUMBER"
+		},
+		{
+			"dbFieldName": "EntityTimestamp",
+			"jsonFieldName": "EntityTimestamp",
+			"jsonType": "DATE_FORMATTED_NUMBER",
+			"jsonDateStringFormat": "yyyyMMddHHmmss",
+			"jsonDateStringTimezone": "UTC"
+		}]
+	},
+	{
+		"name": "Address",
+		"fileNames": ["Address.csv"],
+		"dbIdFields": ["AddressRowidObject"],
+		"dbParentIdFields": ["ParentId"],
+		"jsonUniqueIdField": "AddressRowidObject",
+		"jsonNestField": "Address",
+		"jsonNestType": "ARRAY",
+		"dataFields": [{
+			"dbFieldName": "AddressLastModifiedTimestamp",
+			"jsonType": "DATE_FORMATTED_STRING",
+			"jsonDateStringFormat": "yyyyMMddHHmmss",
+			"jsonDateStringTimezone": "UTC"
+		},
+		{
+			"dbFieldName": "AddressTypeCode",
+			"transformScriptLanguage": "JAVASCRIPT",
+			"transformScript": "if (input === 'RES') { return 'Residential' } else if (input === 'BUS') { return 'Business' } if (input === 'MOBILE') { return 'Mobile' } else { return input }"
+		}]
+	}]
+}

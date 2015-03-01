@@ -25,8 +25,13 @@ import com.cloudant.se.db.loader.read.BaseDataTableReader;
 import com.cloudant.se.db.loader.read.CsvDataTableReader;
 import com.cloudant.se.db.loader.read.SqlDataTableReader;
 import com.cloudant.se.db.loader.write.BaseDocCallable;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -96,19 +101,35 @@ public class App {
         //
         // Read the config they gave us
         try {
-            //
-            // Read the configuration from our file and let it validate itself
-            ObjectMapper mapper = new ObjectMapper();
             File configFile = new File(options.configFileName);
-            config = mapper.readValue(configFile, AppConfig.class);
-            config.defaultDirectory = configFile.getParentFile() != null ? configFile.getParentFile() : new File(".");
-            config.mergeOptions(options);
-            config.validate();
+            if (!configFile.exists()) {
+                log.fatal("Unable to find configuration file - " + configFile.getAbsolutePath());
+                return -5;
+            } else if (!configFile.canRead()) {
+                log.fatal("Unable to read configuration file - " + configFile.getAbsolutePath());
+                return -6;
+            }
 
             //
-            // Print out a sample of what the output JSON documents will look like will look like
-            // TODO
-            // config.printSample();
+            // Validate the schema first
+            final JsonNode appConfigSchema = JsonLoader.fromResource("/AppConfig.schema.json");
+            final JsonNode configJson = JsonLoader.fromFile(configFile);
+            final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+            final JsonSchema schema = factory.getJsonSchema(appConfigSchema);
+
+            ProcessingReport report = schema.validate(configJson);
+            if (report.isSuccess()) {
+                //
+                // Read the configuration from our file and let it validate itself
+                ObjectMapper mapper = new ObjectMapper();
+                config = mapper.readValue(configFile, AppConfig.class);
+                config.setDefaultDirectory(configFile.getParentFile() != null ? configFile.getParentFile() : new File("."));
+                config.mergeOptions(options);
+                config.validate();
+            } else {
+                log.fatal(report);
+                return -4;
+            }
         } catch (IllegalArgumentException e) {
             System.err.println("Configuration error detected - " + e.getMessage());
             config = null;
@@ -124,9 +145,9 @@ public class App {
         }
         //
         // Setup our executor service
-        readerExecutor = Executors.newFixedThreadPool(config.tables.size(), new ThreadFactoryBuilder().setNameFormat("ldr-r-%d").build());
+        readerExecutor = Executors.newFixedThreadPool(config.getTables().size(), new ThreadFactoryBuilder().setNameFormat("ldr-r-%d").build());
 
-        int threads = config.numThreads;
+        int threads = config.getNumThreads();
         ThreadFactory writeThreadFactory = new ThreadFactoryBuilder().setNameFormat("ldr-w-%d").build();
         writerExecutor = new StatusingNotifyingBlockingThreadPoolExecutor(threads, threads * 2, 30, TimeUnit.SECONDS, writeThreadFactory);
 
@@ -141,12 +162,12 @@ public class App {
         log.info("Configuration complete, starting up");
         try {
             ConnectOptions options = new ConnectOptions();
-            options.setMaxConnections(config.numThreads);
-            options.setSocketTimeout(config.socketTimeout);
-            options.setConnectionTimeout(config.connectionTimeout);
+            options.setMaxConnections(config.getNumThreads());
+            options.setSocketTimeout(config.getSocketTimeout());
+            options.setConnectionTimeout(config.getConnectionTimeout());
 
-            config.client = new CloudantClient(config.cloudantAccount, config.cloudantUser, config.cloudantPassword, options);
-            config.database = config.client.database(config.cloudantDatabase, false);
+            config.client = new CloudantClient(config.getCloudantAccount(), config.getCloudantUser(), config.getCloudantPassword(), options);
+            config.database = config.client.database(config.getCloudantDatabase(), false);
             log.info(" --- Connected to Cloudant --- ");
             // log.debug("Available databases - " + config.client.getAllDbs());
             // log.debug("Database shards - " + config.database.getShards().size());
@@ -156,20 +177,20 @@ public class App {
         }
 
         try {
-            for (DataTable table : config.tables) {
-                if (table.useDatabase) {
-                    log.info("Submitting SQL DB reader for " + table.sqlQuery);
+            for (DataTable table : config.getTables()) {
+                if (table.isUseDatabase()) {
+                    log.info("Submitting SQL DB reader for " + table.getSqlQuery());
                     readerExecutor.submit(new SqlDataTableReader(config, table, writerExecutor));
                 } else {
-                    switch (table.fileType) {
+                    switch (table.getFileType()) {
                         case CSV:
-                            log.info("Submitting CSV file reader for " + table.fileNames);
+                            log.info("Submitting CSV file reader for " + table.getFileNames());
                             readerExecutor.submit(new CsvDataTableReader(config, table, writerExecutor));
                             break;
                         case JSON:
                         case XML:
                         default:
-                            log.fatal("Files of type " + table.fileType + " are not supported yet");
+                            log.fatal("Files of type " + table.getFileType() + " are not supported yet");
                             return 3;
                     }
                 }

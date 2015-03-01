@@ -1,0 +1,24 @@
+{
+	"_id": "1",
+	"_rev": "196-497c9ae96632f99866f123829d60233a",
+	"BirthDate": "8/19/1928",
+	"DocumentType": "Person",
+	"EntityTimestamp": "20140222072442",
+	"FirstName": "Howard",
+	"GenderCode": "M",
+	"LastFourSsn": 7773,
+	"LastName": "Gonzalez",
+	"MiddleName": "XS",
+	"SchemaVersion": "1",
+	"SourceSystemId": "duis",
+	"SourceSystemPartyId": "564316331-4",
+	"Address": [{
+		"AddressLastModifiedTimestamp": "20141201153906",
+		"AddressLine1": "36798 6th Center",
+		"AddressTypeCode": "RES",
+		"City": "Wichita Falls",
+		"PostalCode": "76305",
+		"State": "TX",
+		"AddressRowidObject": "2369"
+	}]
+}

@@ -1,0 +1,201 @@
+{
+	"type": "object",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"description": "Main application configuration",
+	"title": "AppConfig",
+	"properties": {
+		"numThreads": {
+			"type": "integer",
+			"description": "The number of writer threads to use when connecting to cloudant"
+		},
+		"defaultSqlUrl": {
+			"type": "string",
+			"description": "Default SQL Url to use when pulling from sources"
+		},
+		"tables": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"$schema": "http://json-schema.org/draft-04/schema#",
+				"description": "A source dataset",
+				"title": "DataTable",
+				"properties": {
+					"sqlPass": {
+						"type": "string",
+						"description": "SQL Password to use when pulling from this source"
+					},
+					"jsonDocumentType": {
+						"type": "string",
+						"description": "Discriminator for document types"
+					},
+					"fileNames": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Set of files we are loading from"
+					},
+					"fileType": {
+						"enum": ["CSV",
+						"JSON",
+						"XML"],
+						"description": "Type of data source"
+					},
+					"name": {
+						"type": "string",
+						"description": "Name of the dataset"
+					},
+					"jsonUniqueIdField": {
+						"type": "string",
+						"description": "The field within the resulting json document that we can unique on"
+					},
+					"dbParentIdFields": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Set of fields that we will use to find our parent id"
+					},
+					"jsonNestField": {
+						"type": "string",
+						"description": "If we are not a parent, what field will we nest under"
+					},
+					"sqlQuery": {
+						"type": "string",
+						"description": "SQL Query to use when pulling from this source"
+					},
+					"sqlDriver": {
+						"type": "string",
+						"description": "SQL Driver to use when pulling from this source"
+					},
+					"sqlUser": {
+						"type": "string",
+						"description": "SQL User to use when pulling from this source"
+					},
+					"dataFields": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"$schema": "http://json-schema.org/draft-04/schema#",
+							"description": "A field within the source dataset",
+							"title": "DataTableField",
+							"properties": {
+								"jsonFieldName": {
+									"type": "string",
+									"description": "Name of the field in the resuting JSON"
+								},
+								"jsonType": {
+									"enum": ["STRING",
+									"NUMBER",
+									"DATE",
+									"DATE_EPOCH",
+									"DATE_FORMATTED_STRING",
+									"DATE_FORMATTED_NUMBER"],
+									"description": "The type of the field in the resulting JSON"
+								},
+								"jsonDateStringTimezone": {
+									"type": "string",
+									"description": "The timezone for date-->string conversions"
+								},
+								"transformScriptLanguage": {
+									"enum": ["GROOVY",
+									"JAVASCRIPT"],
+									"description": "Transformation scrirpt language"
+								},
+								"dbFieldName": {
+									"type": "string",
+									"description": "Name of the field within the source data"
+								},
+								"jsonDateStringFormat": {
+									"type": "string",
+									"description": "The date format for date-->string conversions"
+								},
+								"transformScriptTestInput": {
+									"type": "string",
+									"description": "Transformation script test input (used during validation)"
+								},
+								"transformScriptTestOutputExpected": {
+									"type": "string",
+									"description": "Transformation script test output (used during validation)"
+								},
+								"transformScript": {
+									"type": "string",
+									"description": "Transformation script"
+								}
+							},
+							"required": ["dbFieldName"]
+						},
+						"description": "Set of predefined fields"
+					},
+					"jsonNestType": {
+						"enum": ["ARRAY",
+						"OBJECT",
+						"PARENT",
+						"REFERENCE",
+						"REFERENCE_ARRAY"],
+						"description": "What level of nesting are we doing"
+					},
+					"jsonIncludeEmpty": {
+						"type": "boolean",
+						"description": "Should we store empty field:value pairs in the resultant JSON"
+					},
+					"sqlUrl": {
+						"type": "string",
+						"description": "SQL Url to use when pulling from this source"
+					},
+					"dbIdFields": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Set of fields that we will use to create an _id"
+					}
+				},
+				"required": ["name",
+				"jsonNestType"]
+			},
+			"description": "The tables we are going to load"
+		},
+		"cloudantUser": {
+			"type": "string",
+			"description": "The cloudant account to use"
+		},
+		"cloudantAccount": {
+			"type": "string",
+			"description": "The cloudant account to store the data in"
+		},
+		"socketTimeout": {
+			"type": "integer",
+			"description": "The http socket timeout"
+		},
+		"cloudantPassword": {
+			"type": "string",
+			"description": "The cloudant password to use"
+		},
+		"cloudantDatabase": {
+			"type": "string",
+			"description": "The cloudant database to store the data in"
+		},
+		"defaultSqlUser": {
+			"type": "string",
+			"description": "Default SQL User to use when pulling from sources"
+		},
+		"defaultSqlDriver": {
+			"type": "string",
+			"description": "Default SQL Driver to use when pulling from sources"
+		},
+		"connectionTimeout": {
+			"type": "integer",
+			"description": "The http connection timeout"
+		},
+		"concatinationChar": {
+			"type": "string",
+			"description": "The concatenation character we will use for ids and parentids"
+		},
+		"defaultSqlPass": {
+			"type": "string",
+			"description": "Default SQL Password to use when pulling from sources"
+		}
+	},
+	"required": ["tables"]
+}

@@ -13,29 +13,29 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 
 public class NestedDocArrayCallable extends BaseDocCallable {
-	protected static final Logger	log	= Logger.getLogger(NestedDocArrayCallable.class);
+    protected static final Logger log = Logger.getLogger(NestedDocArrayCallable.class);
 
-	public NestedDocArrayCallable(AppConfig config, DataTable table) {
-		super(config, table);
-	}
+    public NestedDocArrayCallable(AppConfig config, DataTable table) {
+        super(config, table);
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public WriteCode handle() {
-		//
-		// This case is a little more complex -
-		// - Try inserting into an empty top level document
-		// - if it fails, get the parent from the database and add us into it with array logic
-		//
+    @SuppressWarnings("unchecked")
+    @Override
+    public WriteCode handle() {
+        //
+        // This case is a little more complex -
+        // - Try inserting into an empty top level document
+        // - if it fails, get the parent from the database and add us into it with array logic
+        //
 
-		return upsert(parentId, buildEmptyParent(Lists.newArrayList(toMap())));
-	}
+        return upsert(parentId, buildEmptyParent(Lists.newArrayList(toMap())));
+    }
 
-	@Override
-	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
-		Map<String, Object> fromCloudant = get(parentId);
-		addToArrayAt(fromCloudant, table.nestField, toMap());
+    @Override
+    protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
+        Map<String, Object> fromCloudant = get(parentId);
+        addObjectToArray(fromCloudant, toMap());
 
-		return fromCloudant;
-	}
+        return fromCloudant;
+    }
 }

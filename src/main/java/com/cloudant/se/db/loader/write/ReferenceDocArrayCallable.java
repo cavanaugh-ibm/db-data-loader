@@ -13,29 +13,29 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 
 public class ReferenceDocArrayCallable extends BaseDocCallable {
-	protected static final Logger	log	= Logger.getLogger(NestedDocArrayCallable.class);
+    protected static final Logger log = Logger.getLogger(NestedDocArrayCallable.class);
 
-	public ReferenceDocArrayCallable(AppConfig config, DataTable table) {
-		super(config, table);
-	}
+    public ReferenceDocArrayCallable(AppConfig config, DataTable table) {
+        super(config, table);
+    }
 
-	@Override
-	public WriteCode handle() throws Exception {
-		//
-		// This case is a little more complex -
-		// - We need to insert the base object (upsert)
-		// - We need to add a reference to the parent object (upsert)
-		//
+    @Override
+    public WriteCode handle() throws Exception {
+        //
+        // This case is a little more complex -
+        // - We need to insert the base object (upsert)
+        // - We need to add a reference to the parent object (upsert)
+        //
 
-		upsert(id, toMap());
-		return upsert(parentId, buildEmptyParent(Lists.newArrayList(REF_PREFIX + id)));
-	}
+        upsert(id, toMap());
+        return upsert(parentId, buildEmptyParent(Lists.newArrayList(REF_PREFIX + id)));
+    }
 
-	@Override
-	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
-		Map<String, Object> fromCloudant = get(parentId);
-		addToArrayAt(fromCloudant, table.nestField, REF_PREFIX + id);
+    @Override
+    protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
+        Map<String, Object> fromCloudant = get(parentId);
+        addStringToArray(fromCloudant, table.getJsonNestField(), REF_PREFIX + id);
 
-		return fromCloudant;
-	}
+        return fromCloudant;
+    }
 }

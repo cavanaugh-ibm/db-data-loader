@@ -12,26 +12,26 @@ import com.cloudant.se.db.loader.config.DataTable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ParentDocCallable extends BaseDocCallable {
-	protected static final Logger	log	= Logger.getLogger(NestedDocArrayCallable.class);
+    protected static final Logger log = Logger.getLogger(NestedDocArrayCallable.class);
 
-	public ParentDocCallable(AppConfig config, DataTable table) {
-		super(config, table);
-	}
+    public ParentDocCallable(AppConfig config, DataTable table) {
+        super(config, table);
+    }
 
-	@Override
-	public WriteCode handle() throws Exception {
-		//
-		// This is the simplest case of all - we try to insert it, if it fails, we update from the database
-		//
+    @Override
+    public WriteCode handle() throws Exception {
+        //
+        // This is the simplest case of all - we try to insert it, if it fails, we update from the database
+        //
 
-		return upsert(id, toMap());
-	}
+        return upsert(id, toMap());
+    }
 
-	@Override
-	protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
-		Map<String, Object> fromCloudant = get(id);
-		fromCloudant.putAll(toMap());
+    @Override
+    protected Map<String, Object> handleConflict(Map<String, Object> failed) throws StructureException, JsonProcessingException, IOException {
+        Map<String, Object> fromCloudant = get(id);
+        fromCloudant.putAll(toMap());
 
-		return fromCloudant;
-	}
+        return fromCloudant;
+    }
 }

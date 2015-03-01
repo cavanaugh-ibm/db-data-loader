@@ -1,0 +1,48 @@
+{
+	"numThreads": 200,
+	"connectionTimeout": 60000,
+	"socketTimeout": 30000,
+	"cloudantAccount": "config_account",
+	"cloudantDatabase": "config_database",
+	"cloudantUser": "config_user",
+	"cloudantPassword": "config_password",
+	"tables": [{
+		"name": "Entity1",
+		"fileNames": ["Entity1.csv"],
+		"dbIdFields": ["_id"],
+		"jsonDocumentType": "Entity1",
+		"jsonNestType": "PARENT",
+		"dataFields": [{
+			"dbFieldName": "Field1",
+			"jsonType": "NUMBER"
+		},
+		{
+			"dbFieldName": "Field2",
+			"jsonType": "DATE_FORMATTED_STRING",
+			"jsonDateStringFormat": "yyyyMMddHHmmss",
+			"jsonDateStringTimezone": "UTC"
+		},
+		{
+			"dbFieldName": "Field3",
+			"jsonType": "DATE"
+		},
+		{
+			"dbFieldName": "Field4",
+			"jsonType": "DATE_EPOCH"
+		},
+		{
+			"dbFieldName": "Field5",
+			"include": false
+		},
+		{
+			"dbFieldName": "Field6",
+			"transformScriptLanguage": "GROOVY",
+			"transformScript": "return String.format(\"(%s) %s-%s\", input.substring(0, 3), input.substring(3, 6), input.substring(6, 10))"
+		},
+		{
+			"dbFieldName": "Field7",
+			"transformScriptLanguage": "JAVASCRIPT",
+			"transformScript": "if (input === 'RES') { return 'Residential' } else if (input === 'BUS') { return 'Business' } if (input === 'MOBILE') { return 'Mobile' } else { return input }"
+		}]
+	}]
+}

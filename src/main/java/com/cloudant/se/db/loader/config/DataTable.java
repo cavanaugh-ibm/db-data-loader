@@ -1,5 +1,6 @@
 package com.cloudant.se.db.loader.config;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -8,127 +9,297 @@ import org.springframework.util.Assert;
 
 import com.cloudant.se.Constants;
 import com.cloudant.se.db.loader.AppConstants.FileType;
+import com.cloudant.se.db.loader.AppConstants.JsonType;
 import com.cloudant.se.db.loader.AppConstants.NestType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.Attributes;
 import com.google.common.collect.Sets;
 
+@Attributes(title = "DataTable", description = "A source dataset")
 public class DataTable {
-	@JsonIgnore
-	protected static final Logger	log					= Logger.getLogger(DataTable.class);
+    @JsonIgnore
+    protected static final Logger log               = Logger.getLogger(DataTable.class);
 
-	public Set<DataTableField>		dataFields			= Sets.newLinkedHashSet();
+    @Attributes(required = false, description = "Should we try to cast all fields to numeric for this datasource?")
+    private boolean               castNumerics      = false;
 
-	public String					name				= null;
+    @Attributes(required = false, description = "Set of predefined fields")
+    private Set<DataTableField>   dataFields        = Sets.newLinkedHashSet();
 
-	public Set<String>				fileNames			= Sets.newLinkedHashSet();
+    @Attributes(required = false, description = "Set of fields that we will use to create an _id")
+    private Set<String>           dbIdFields        = Sets.newLinkedHashSet();
 
-	public FileType					fileType			= FileType.CSV;
+    @Attributes(required = false, description = "Set of fields that we will use to find our parent id")
+    private Set<String>           dbParentIdFields  = Sets.newLinkedHashSet();
 
-	public String					uniqueIdField		= "_id";
-	public Set<String>				idFields			= Sets.newLinkedHashSet();
-	public String					jsonDocumentType	= null;
+    @Attributes(required = false, description = "Set of files we are loading from")
+    private Set<String>           fileNames         = Sets.newLinkedHashSet();
 
-	public String					nestField			= null;
-	public NestType					nestType			= NestType.PARENT;
-	public Set<String>				parentIdFields		= Sets.newLinkedHashSet();
-	public String					sqlDriver			= null;
-	public String					sqlPass				= null;
-	public String					sqlQuery			= null;
+    @Attributes(required = false, description = "Type of data source")
+    private FileType              fileType          = FileType.CSV;
 
-	public String					sqlUrl				= null;
-	public String					sqlUser				= null;
+    @Attributes(required = false, description = "Discriminator for document types")
+    private String                jsonDocumentType  = null;
 
-	public boolean					useDatabase			= false;
-	public boolean					includeEmpty		= false;
+    @Attributes(required = false, description = "Should we store empty field:value pairs in the resultant JSON")
+    private boolean               jsonIncludeEmpty  = false;
 
-	public boolean					tryCaseNumeric		= false;
+    @Attributes(required = false, description = "If we are not a parent, what field will we nest under")
+    private String                jsonNestField     = null;
 
-	@Override
-	public String toString() {
-		return "DataTable [jsonDocumentType=" + jsonDocumentType + ", idFields=" + idFields + ", useDatabase=" + useDatabase + ", sqlUrl=" + sqlUrl + ", sqlDriver=" + sqlDriver + ", sqlUser="
-				+ sqlUser + ", sqlPass=" + sqlPass + ", sqlQuery=" + sqlQuery + ", fileNames=" + fileNames + ", fileType=" + fileType + ", dataFields=" + dataFields + ", parentIdFields="
-				+ parentIdFields + ", nestField=" + nestField + ", nestType=" + nestType + "]";
-	}
+    @Attributes(required = true, description = "What level of nesting are we doing")
+    private NestType              jsonNestType      = NestType.PARENT;
 
-	public void validate() {
-		Assert.hasText(name, "Must provide a name for this table (used during logging and debugging)");
+    @Attributes(required = false, description = "The field within the resulting json document that we can unique on")
+    private String                jsonUniqueIdField = "_id";
 
-		printSetting("Name", name);
-		printSetting("Type", nestType);
+    @Attributes(required = true, description = "Name of the dataset")
+    private String                name              = null;
 
-		if (useDatabase) {
-			Assert.hasText(sqlUrl, "Must provide the JDBC URL of the database to pull this data from or set the default database configs");
-			Assert.hasText(sqlDriver, "Must provide the JDBC driver of the database to pull this data from or set the default database configs");
-			Assert.hasText(sqlUser, "Must provide the JDBC user of the database to pull this data from or set the default database configs");
-			Assert.hasText(sqlPass, "Must provide the JDBC password of the database to pull this data from or set the default database configs");
-			Assert.hasText(sqlQuery, "Must provide the SQL query that we will use to pull the data");
-			printSetting("Source", sqlUrl);
-		} else {
-			Assert.notEmpty(fileNames, "Must provide a data file for this table");
-			Assert.notNull(fileType, "Must provide a type for the data files");
-			printSetting("Source", fileNames);
-		}
+    @Attributes(required = false, description = "SQL Driver to use when pulling from this source")
+    private String                sqlDriver         = null;
 
-		switch (nestType) {
-			case PARENT:
-				//
-				// PARENT table records must provide at the very least the idFields
-				// Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
-				Assert.hasText(jsonDocumentType, "Must provide the type name for the created document ");
-				Assert.isTrue(StringUtils.equals("_id", uniqueIdField), "For top level documents, the idField must be \"_id\"");
-				if (idFields == null || idFields.size() == 0) {
-					idFields = Sets.newLinkedHashSet();
-					idFields.add(Constants.GENERATED);
-				}
-				printSetting("_id fields", idFields);
-				break;
-			case ARRAY:
-				//
-				// ARRAY table records must provide at the very least the parentFields and the nestField
-				Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
-				Assert.notEmpty(parentIdFields, "Must provide field(s) to create to find the parent _id for the record that each row will be inserted into - parentIdFields");
-				Assert.hasText(nestField, "Must provide the field in the parent document that we will insert at");
-				printSetting("_id fields", idFields);
-				printSetting("parent _id fields", parentIdFields);
-				printSetting("nestField", nestField);
-				break;
-			case OBJECT:
-				//
-				// OBJECT table records must provide at the very least the parentFields and the nestField
-				Assert.notEmpty(parentIdFields, "Must provide field(s) to create an _id for the record that each row will be inserted into - parentIdFields");
-				Assert.hasText(nestField, "Must provide the field in the parent document that we will insert at");
-				printSetting("parent _id fields", parentIdFields);
-				printSetting("nestField", nestField);
-				break;
-			case REFERENCE:
-			case REFERENCE_ARRAY:
-				//
-				// REFERENCE table records must provide at the very least the parentFields and the nestField and the field(s) to create an _id for the records in this table
-				Assert.notEmpty(parentIdFields, "Must provide field(s) to create an _id for the record that each row will be inserted into - parentIdFields");
-				Assert.hasText(nestField, "Must provide the field in the parent document that we will insert at");
-				Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
-				Assert.hasText(jsonDocumentType, "Must provide the type name for the created document ");
-				Assert.isTrue(StringUtils.equals("_id", uniqueIdField), "For top level documents, the idField must be \"_id\"");
-				printSetting("_id fields", idFields);
-				printSetting("parent _id fields", parentIdFields);
-				printSetting("nestField", nestField);
-				break;
-			default:
-				break;
-		}
+    @Attributes(required = false, description = "SQL Password to use when pulling from this source")
+    private String                sqlPass           = null;
 
-		uniqueIdField = StringUtils.defaultIfBlank(uniqueIdField, "_id");
-		// System.out.println("Unique key equals - [" + idField + "][" + StringUtils.defaultIfBlank(jsonDocumentType, nestField) + "]");
+    @Attributes(required = false, description = "SQL Query to use when pulling from this source")
+    private String                sqlQuery          = null;
 
-		if (dataFields != null) {
-			for (DataTableField field : dataFields) {
-				log.info("    Validating field");
-				field.validate();
-			}
-		}
-	}
+    @Attributes(required = false, description = "SQL Url to use when pulling from this source")
+    private String                sqlUrl            = null;
 
-	private void printSetting(String setting, Object value) {
-		log.info("    " + setting + " --> " + value);
-	}
+    @Attributes(required = false, description = "SQL User to use when pulling from this source")
+    private String                sqlUser           = null;
+
+    @Attributes(required = false, description = "Should we pull from a database or file?")
+    private boolean               useDatabase       = false;
+
+    public Set<DataTableField> getDataFields() {
+        return dataFields;
+    }
+
+    public Set<String> getDbIdFields() {
+        return dbIdFields;
+    }
+
+    public Set<String> getDbParentIdFields() {
+        return dbParentIdFields;
+    }
+
+    public Set<String> getFileNames() {
+        return fileNames;
+    }
+
+    public FileType getFileType() {
+        return fileType;
+    }
+
+    public String getJsonDocumentType() {
+        return jsonDocumentType;
+    }
+
+    public String getJsonNestField() {
+        return jsonNestField;
+    }
+
+    public NestType getJsonNestType() {
+        return jsonNestType;
+    }
+
+    public String getJsonUniqueIdField() {
+        return jsonUniqueIdField;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSqlDriver() {
+        return sqlDriver;
+    }
+
+    public String getSqlPass() {
+        return sqlPass;
+    }
+
+    public String getSqlQuery() {
+        return sqlQuery;
+    }
+
+    public String getSqlUrl() {
+        return sqlUrl;
+    }
+
+    public String getSqlUser() {
+        return sqlUser;
+    }
+
+    public boolean isCastNumerics() {
+        return castNumerics;
+    }
+
+    public boolean isJsonIncludeEmpty() {
+        return jsonIncludeEmpty;
+    }
+
+    public boolean isUseDatabase() {
+        return useDatabase;
+    }
+
+    public void setCastNumerics(boolean tryCaseNumeric) {
+        this.castNumerics = tryCaseNumeric;
+    }
+
+    public void setDataFields(Set<DataTableField> dataFields) {
+        this.dataFields = dataFields;
+    }
+
+    public void setDbIdFields(Set<String> idFields) {
+        this.dbIdFields = idFields;
+    }
+
+    public void setDbParentIdFields(Set<String> parentIdFields) {
+        this.dbParentIdFields = parentIdFields;
+    }
+
+    public void setFileNames(Set<String> fileNames) {
+        this.fileNames = fileNames;
+    }
+
+    public void setFileType(FileType fileType) {
+        this.fileType = fileType;
+    }
+
+    public void setJsonDocumentType(String jsonDocumentType) {
+        this.jsonDocumentType = jsonDocumentType;
+    }
+
+    public void setJsonIncludeEmpty(boolean includeEmpty) {
+        this.jsonIncludeEmpty = includeEmpty;
+    }
+
+    public void setJsonNestField(String nestField) {
+        this.jsonNestField = nestField;
+    }
+
+    public void setJsonNestType(NestType nestType) {
+        this.jsonNestType = nestType;
+    }
+
+    public void setJsonUniqueIdField(String uniqueIdField) {
+        this.jsonUniqueIdField = uniqueIdField;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSqlDriver(String sqlDriver) {
+        this.sqlDriver = sqlDriver;
+    }
+
+    public void setSqlPass(String sqlPass) {
+        this.sqlPass = sqlPass;
+    }
+
+    public void setSqlQuery(String sqlQuery) {
+        this.sqlQuery = sqlQuery;
+    }
+
+    public void setSqlUrl(String sqlUrl) {
+        this.sqlUrl = sqlUrl;
+    }
+
+    public void setSqlUser(String sqlUser) {
+        this.sqlUser = sqlUser;
+    }
+
+    public void setUseDatabase(boolean useDatabase) {
+        this.useDatabase = useDatabase;
+    }
+
+    public void validate() {
+        Assert.hasText(getName(), "Must provide a name for this table (used during logging and debugging)");
+
+        printSetting("Name", getName());
+        printSetting("Type", getJsonNestType());
+
+        if (isUseDatabase()) {
+            Assert.hasText(getSqlUrl(), "Must provide the JDBC URL of the database to pull this data from or set the default database configs");
+            Assert.hasText(getSqlDriver(), "Must provide the JDBC driver of the database to pull this data from or set the default database configs");
+            Assert.hasText(getSqlUser(), "Must provide the JDBC user of the database to pull this data from or set the default database configs");
+            Assert.hasText(getSqlPass(), "Must provide the JDBC password of the database to pull this data from or set the default database configs");
+            Assert.hasText(getSqlQuery(), "Must provide the SQL query that we will use to pull the data");
+            printSetting("Source", getSqlUrl());
+        } else {
+            Assert.notEmpty(getFileNames(), "Must provide a data file for this table");
+            Assert.notNull(getFileType(), "Must provide a type for the data files");
+            printSetting("Source", getFileNames());
+        }
+
+        switch (getJsonNestType()) {
+            case PARENT:
+                //
+                // PARENT table records must provide at the very least the idFields
+                // Assert.notEmpty(idFields, "Must provide field(s) to create an _id for the records in this table");
+                Assert.hasText(getJsonDocumentType(), "Must provide the type name for the created document ");
+                Assert.isTrue(StringUtils.equals("_id", getJsonUniqueIdField()), "For top level documents, the idField must be \"_id\"");
+                if (getDbIdFields() == null || getDbIdFields().size() == 0) {
+                    setDbIdFields(new LinkedHashSet<String>());
+                    getDbIdFields().add(Constants.GENERATED);
+                }
+                printSetting("_id fields", getDbIdFields());
+                break;
+            case ARRAY:
+                //
+                // ARRAY table records must provide at the very least the parentFields and the nestField
+                Assert.notEmpty(getDbIdFields(), "Must provide field(s) to create an _id for the records in this table");
+                Assert.notEmpty(getDbParentIdFields(), "Must provide field(s) to create to find the parent _id for the record that each row will be inserted into - parentIdFields");
+                Assert.hasText(getJsonNestField(), "Must provide the field in the parent document that we will insert at");
+                printSetting("_id fields", getDbIdFields());
+                printSetting("parent _id fields", getDbParentIdFields());
+                printSetting("nestField", getJsonNestField());
+                break;
+            case OBJECT:
+                //
+                // OBJECT table records must provide at the very least the parentFields and the nestField
+                Assert.notEmpty(getDbParentIdFields(), "Must provide field(s) to create an _id for the record that each row will be inserted into - parentIdFields");
+                Assert.hasText(getJsonNestField(), "Must provide the field in the parent document that we will insert at");
+                printSetting("parent _id fields", getDbParentIdFields());
+                printSetting("nestField", getJsonNestField());
+                break;
+            case REFERENCE:
+            case REFERENCE_ARRAY:
+                //
+                // REFERENCE table records must provide at the very least the parentFields and the nestField and the field(s) to create an _id for the records in this table
+                Assert.notEmpty(getDbParentIdFields(), "Must provide field(s) to create an _id for the record that each row will be inserted into - parentIdFields");
+                Assert.hasText(getJsonNestField(), "Must provide the field in the parent document that we will insert at");
+                Assert.notEmpty(getDbIdFields(), "Must provide field(s) to create an _id for the records in this table");
+                Assert.hasText(getJsonDocumentType(), "Must provide the type name for the created document ");
+                Assert.isTrue(StringUtils.equals("_id", getJsonUniqueIdField()), "For top level documents, the idField must be \"_id\"");
+                printSetting("_id fields", getDbIdFields());
+                printSetting("parent _id fields", getDbParentIdFields());
+                printSetting("nestField", getJsonNestField());
+                break;
+            default:
+                break;
+        }
+
+        setJsonUniqueIdField(StringUtils.defaultIfBlank(getJsonUniqueIdField(), "_id"));
+        // System.out.println("Unique key equals - [" + idField + "][" + StringUtils.defaultIfBlank(jsonDocumentType, nestField) + "]");
+
+        if (getDataFields() != null) {
+            for (DataTableField field : getDataFields()) {
+                if (castNumerics) {
+                    field.setJsonType(JsonType.NUMBER);
+                }
+
+                field.validate();
+            }
+        }
+    }
+
+    private void printSetting(String setting, Object value) {
+        log.debug("    " + setting + " --> " + value);
+    }
 }

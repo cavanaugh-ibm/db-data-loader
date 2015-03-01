@@ -1,0 +1,22 @@
+{
+	"numThreads": 200,
+	"connectionTimeout": 60000,
+	"socketTimeout": 30000,
+	"cloudantAccount": "config_account",
+	"cloudantDatabase": "config_database",
+	"cloudantUser": "config_user",
+	"cloudantPassword": "config_password",
+	"tables": [{
+		"name": "Address",
+		"fileNames": ["Address.csv"],
+		"dbIdFields": ["AddressRowidObject"],
+		"dbParentIdFields": ["ParentId"],
+		"jsonUniqueIdField": "AddressRowidObject",
+		"jsonNestField": "Address",
+		"jsonNestType": "ARRAY",
+		"dataFields": [{
+			"dbFieldName": "AddressLastModifiedTimestamp",
+			"jsonType": "DATE"
+		}]
+	}]
+}

@@ -11,95 +11,113 @@ import com.cloudant.client.api.CloudantClient;
 import com.cloudant.client.api.Database;
 import com.cloudant.se.db.loader.AppOptions;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Sets;
+import com.github.reinert.jjschema.Attributes;
 
+@Attributes(title = "AppConfig", description = "Main application configuration")
 public class AppConfig {
     @JsonIgnore
-    protected static final Logger log                    = Logger.getLogger(AppConfig.class);
+    protected static final Logger log               = Logger.getLogger(AppConfig.class);
 
     @JsonIgnore
-    public CloudantClient         client                 = null;
+    public CloudantClient         client            = null;
     @JsonIgnore
-    public Database               database               = null;
+    public Database               database          = null;
 
-    public String                 cloudantAccount        = null;                             // see mergeOptions method below
-    public String                 cloudantDatabase       = null;                             // see mergeOptions method below
-    public String                 cloudantPassword       = null;                             // see mergeOptions method below
-    public String                 cloudantUser           = null;                             // see mergeOptions method below
-    public char                   concatinationChar      = '_';
+    @Attributes(required = false, description = "The cloudant account to store the data in")
+    private String                cloudantAccount   = null;                             // see mergeOptions method below
 
-    public File                   defaultDirectory       = new File(".");
-    public String                 defaultSqlDriver       = null;
-    public String                 defaultSqlPass         = null;
-    public String                 defaultSqlUrl          = null;
+    @Attributes(required = false, description = "The cloudant database to store the data in")
+    private String                cloudantDatabase  = null;                             // see mergeOptions method below
 
-    public String                 defaultSqlUser         = null;
+    @Attributes(required = false, description = "The cloudant password to use")
+    private String                cloudantPassword  = null;                             // see mergeOptions method below
 
-    public int                    maxRetries             = 20;
-    public int                    numThreads             = 0;
-    public int                    connectionTimeout      = 0;                                // In ms
-    public int                    socketTimeout          = 0;                                // In ms
+    @Attributes(required = false, description = "The cloudant account to use")
+    private String                cloudantUser      = null;                             // see mergeOptions method below
 
-    public Set<DataTable>         tables                 = Sets.newLinkedHashSet();
+    @Attributes(required = false, description = "The concatenation character we will use for ids and parentids")
+    private char                  concatinationChar = '_';
 
-    public boolean                autoCastDatesToNumbers = false;
-    public boolean                autoCastDatesToStrings = false;
-    public String                 autoCastDatesFormat    = null;
-    public String                 autoCastDatesTimezone  = null;
+    @Attributes(required = false, description = "The http connection timeout")
+    private int                   connectionTimeout = 0;                                // In ms
 
-    @Override
-    public String toString() {
-        return "AppConfig [tables=" + tables + ", concatinationChar=" + concatinationChar + ", defaultSqlUrl=" + defaultSqlUrl + ", defaultSqlDriver=" + defaultSqlDriver + ", defaultSqlUser="
-                + defaultSqlUser + ", defaultSqlPass=" + defaultSqlPass + ", defaultDirectory=" + defaultDirectory + "]";
+    private File                  defaultDirectory  = new File(".");
+
+    @Attributes(required = false, description = "Default SQL Driver to use when pulling from sources")
+    private String                defaultSqlDriver  = null;
+
+    @Attributes(required = false, description = "Default SQL Password to use when pulling from sources")
+    private String                defaultSqlPass    = null;
+
+    @Attributes(required = false, description = "Default SQL Url to use when pulling from sources")
+    private String                defaultSqlUrl     = null;
+
+    @Attributes(required = false, description = "Default SQL User to use when pulling from sources")
+    private String                defaultSqlUser    = null;
+
+    @Attributes(required = false, description = "The number of writer threads to use when connecting to cloudant")
+    private int                   numThreads        = 0;
+
+    @Attributes(required = false, description = "The http socket timeout")
+    private int                   socketTimeout     = 0;                                // In ms
+
+    @Attributes(required = true, description = "The tables we are going to load")
+    private Set<DataTable>        tables            = null;
+
+    public String getCloudantAccount() {
+        return cloudantAccount;
     }
 
-    public void validate() {
-        log.info("Validating configuration");
-        //
-        // Validate our destination
-        Assert.hasText(cloudantAccount, "Must provde a cloudant account to work with");
-        Assert.hasText(cloudantDatabase, "Must provde a cloudant database to work with");
-        Assert.hasText(cloudantUser, "Must provde a cloudant user name");
-        Assert.hasText(cloudantPassword, "Must provde a cloudant password");
-        printSetting("Will output to  \"" + cloudantDatabase + "\" in " + cloudantAccount);
-
-        //
-        // Validate our date casting logic
-        Assert.isTrue(!(autoCastDatesToNumbers && autoCastDatesToStrings), "Must chose either auto casting and outputing dates as strings or number");
-        if (autoCastDatesToStrings) {
-            Assert.hasText(autoCastDatesFormat, "Must provde an output format for casted date strings");
-            Assert.hasText(autoCastDatesTimezone, "Must provde a timezone for casted date strings");
-            printSetting("Will auto cast dates and output like \"" + autoCastDatesFormat + "\" in " + autoCastDatesTimezone + " timezone");
-        }
-        if (autoCastDatesToNumbers) {
-            printSetting("Will auto cast dates and output as epoch");
-        }
-
-        //
-        // Validate each of the tables
-        Assert.notEmpty(tables, "Must define at least one table to load");
-        for (DataTable table : tables) {
-            if (table.useDatabase) {
-                table.sqlDriver = StringUtils.isNotBlank(table.sqlDriver) ? table.sqlDriver : defaultSqlDriver;
-                table.sqlPass = StringUtils.isNotBlank(table.sqlPass) ? table.sqlPass : defaultSqlPass;
-                table.sqlUrl = StringUtils.isNotBlank(table.sqlUrl) ? table.sqlUrl : defaultSqlUrl;
-                table.sqlUser = StringUtils.isNotBlank(table.sqlUser) ? table.sqlUser : defaultSqlUser;
-            }
-
-            log.info("Validating table");
-            table.validate();
-        }
-
-        //
-        // Do any calculations that are required
-        if (numThreads < 1) {
-            numThreads = tables.size() * 6;
-        }
-        printSetting("Number of writer threads - " + numThreads);
+    public String getCloudantDatabase() {
+        return cloudantDatabase;
     }
 
-    private void printSetting(String message) {
-        log.info("Global: " + message);
+    public String getCloudantPassword() {
+        return cloudantPassword;
+    }
+
+    public String getCloudantUser() {
+        return cloudantUser;
+    }
+
+    public char getConcatinationChar() {
+        return concatinationChar;
+    }
+
+    public int getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public File getDefaultDirectory() {
+        return defaultDirectory;
+    }
+
+    public String getDefaultSqlDriver() {
+        return defaultSqlDriver;
+    }
+
+    public String getDefaultSqlPass() {
+        return defaultSqlPass;
+    }
+
+    public String getDefaultSqlUrl() {
+        return defaultSqlUrl;
+    }
+
+    public String getDefaultSqlUser() {
+        return defaultSqlUser;
+    }
+
+    public int getNumThreads() {
+        return numThreads;
+    }
+
+    public int getSocketTimeout() {
+        return socketTimeout;
+    }
+
+    public Set<DataTable> getTables() {
+        return tables;
     }
 
     /**
@@ -109,13 +127,105 @@ public class AppConfig {
      * <li>System property <b>cloudant_*</b></li>
      * <li>key in the configuration file</li>
      * </ol>
-     * 
+     *
      * @param cloudantPassword
      */
     public void mergeOptions(AppOptions options) {
-        cloudantAccount = StringUtils.defaultIfBlank(options.cloudantAccount, cloudantAccount);
-        cloudantDatabase = StringUtils.defaultIfBlank(options.cloudantDatabase, cloudantDatabase);
-        cloudantUser = StringUtils.defaultIfBlank(options.cloudantUser, cloudantUser);
-        cloudantPassword = StringUtils.defaultIfBlank(options.cloudantPassword, cloudantPassword);
+        setCloudantAccount(StringUtils.defaultIfBlank(options.cloudantAccount, getCloudantAccount()));
+        setCloudantDatabase(StringUtils.defaultIfBlank(options.cloudantDatabase, getCloudantDatabase()));
+        setCloudantUser(StringUtils.defaultIfBlank(options.cloudantUser, getCloudantUser()));
+        setCloudantPassword(StringUtils.defaultIfBlank(options.cloudantPassword, getCloudantPassword()));
+    }
+
+    public void setCloudantAccount(String cloudantAccount) {
+        this.cloudantAccount = cloudantAccount;
+    }
+
+    public void setCloudantDatabase(String cloudantDatabase) {
+        this.cloudantDatabase = cloudantDatabase;
+    }
+
+    public void setCloudantPassword(String cloudantPassword) {
+        this.cloudantPassword = cloudantPassword;
+    }
+
+    public void setCloudantUser(String cloudantUser) {
+        this.cloudantUser = cloudantUser;
+    }
+
+    public void setConcatinationChar(char concatinationChar) {
+        this.concatinationChar = concatinationChar;
+    }
+
+    public void setConnectionTimeout(int connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+    }
+
+    public void setDefaultDirectory(File defaultDirectory) {
+        this.defaultDirectory = defaultDirectory;
+    }
+
+    public void setDefaultSqlDriver(String defaultSqlDriver) {
+        this.defaultSqlDriver = defaultSqlDriver;
+    }
+
+    public void setDefaultSqlPass(String defaultSqlPass) {
+        this.defaultSqlPass = defaultSqlPass;
+    }
+
+    public void setDefaultSqlUrl(String defaultSqlUrl) {
+        this.defaultSqlUrl = defaultSqlUrl;
+    }
+
+    public void setDefaultSqlUser(String defaultSqlUser) {
+        this.defaultSqlUser = defaultSqlUser;
+    }
+
+    public void setNumThreads(int numThreads) {
+        this.numThreads = numThreads;
+    }
+
+    public void setSocketTimeout(int socketTimeout) {
+        this.socketTimeout = socketTimeout;
+    }
+
+    public void setTables(Set<DataTable> tables) {
+        this.tables = tables;
+    }
+
+    public void validate() {
+        log.info("Validating application configuration");
+        //
+        // Validate our destination
+        Assert.hasText(getCloudantAccount(), "Must provde a cloudant account to work with");
+        Assert.hasText(getCloudantDatabase(), "Must provde a cloudant database to work with");
+        Assert.hasText(getCloudantUser(), "Must provde a cloudant user name");
+        Assert.hasText(getCloudantPassword(), "Must provde a cloudant password");
+        printSetting("Will output to  \"" + getCloudantDatabase() + "\" in " + getCloudantAccount());
+
+        //
+        // Validate each of the tables
+        Assert.notEmpty(getTables(), "Must define at least one table to load");
+        for (DataTable table : getTables()) {
+            if (table.isUseDatabase()) {
+                table.setSqlDriver(StringUtils.isNotBlank(table.getSqlDriver()) ? table.getSqlDriver() : getDefaultSqlDriver());
+                table.setSqlPass(StringUtils.isNotBlank(table.getSqlPass()) ? table.getSqlPass() : getDefaultSqlPass());
+                table.setSqlUrl(StringUtils.isNotBlank(table.getSqlUrl()) ? table.getSqlUrl() : getDefaultSqlUrl());
+                table.setSqlUser(StringUtils.isNotBlank(table.getSqlUser()) ? table.getSqlUser() : getDefaultSqlUser());
+            }
+
+            table.validate();
+        }
+
+        //
+        // Do any calculations that are required
+        if (getNumThreads() < 1) {
+            setNumThreads(getTables().size() * 6);
+        }
+        printSetting("Number of writer threads - " + getNumThreads());
+    }
+
+    private void printSetting(String message) {
+        log.debug("Global: " + message);
     }
 }

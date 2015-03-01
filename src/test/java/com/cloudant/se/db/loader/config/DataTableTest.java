@@ -10,11 +10,11 @@ public class DataTableTest {
 	@Test
 	public void testValidateArray() {
 		DataTable d = new DataTable();
-		d.name = "JunitTesting";
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.ARRAY;
-		d.fileNames.add("bogus_file_name");
-		d.idFields.add("x");
+		d.setName("JunitTesting");
+		d.setJsonDocumentType("JunitTesting");
+		d.setJsonNestType(NestType.ARRAY);
+		d.getFileNames().add("bogus_file_name");
+		d.getDbIdFields().add("x");
 
 		// Missing all
 		try {
@@ -24,14 +24,14 @@ public class DataTableTest {
 		}
 
 		// Missing nestField
-		d.parentIdFields.add("nParentId");
+		d.getDbParentIdFields().add("nParentId");
 		try {
 			d.validate();
 			fail("Array documents should require parentIdFields, nestField");
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.nestField = "Children";
+		d.setJsonNestField("Children");
 		try {
 			d.validate();
 		} catch (IllegalArgumentException e) {
@@ -48,10 +48,10 @@ public class DataTableTest {
 	@Test
 	public void testValidateFileTypeCSV() {
 		DataTable d = new DataTable();
-		d.name = "JunitTesting";
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.PARENT;
-		d.idFields.add("nId");
+		d.setName("JunitTesting");
+		d.setJsonDocumentType("JunitTesting");
+		d.setJsonNestType(NestType.PARENT);
+		d.getDbIdFields().add("nId");
 
 		try {
 			d.validate();
@@ -59,7 +59,7 @@ public class DataTableTest {
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.fileNames.add("bogus");
+		d.getFileNames().add("bogus");
 		try {
 			d.validate();
 		} catch (IllegalArgumentException e) {
@@ -70,11 +70,11 @@ public class DataTableTest {
 	@Test
 	public void testValidateFileTypeDB() {
 		DataTable d = new DataTable();
-		d.name = "JunitTesting";
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.PARENT;
-		d.useDatabase = true;
-		d.idFields.add("nId");
+		d.setName("JunitTesting");
+		d.setJsonDocumentType("JunitTesting");
+		d.setJsonNestType(NestType.PARENT);
+		d.setUseDatabase(true);
+		d.getDbIdFields().add("nId");
 
 		try {
 			d.validate();
@@ -82,35 +82,35 @@ public class DataTableTest {
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.sqlDriver = "abc1";
+		d.setSqlDriver("abc1");
 		try {
 			d.validate();
 			fail("DB based source files should require sql driver, url, user, pass, and query");
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.sqlPass = "abc2";
+		d.setSqlPass("abc2");
 		try {
 			d.validate();
 			fail("DB based source files should require sql driver, url, user, pass, and query");
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.sqlQuery = "abc3";
+		d.setSqlQuery("abc3");
 		try {
 			d.validate();
 			fail("DB based source files should require sql driver, url, user, pass, and query");
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.sqlUrl = "abc4";
+		d.setSqlUrl("abc4");
 		try {
 			d.validate();
 			fail("DB based source files should require sql driver, url, user, pass, and query");
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.sqlUser = "abc5";
+		d.setSqlUser("abc5");
 		try {
 			d.validate();
 		} catch (IllegalArgumentException e) {
@@ -122,10 +122,10 @@ public class DataTableTest {
 	@Test
 	public void testValidateObject() {
 		DataTable d = new DataTable();
-		d.name = "JunitTesting";
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.OBJECT;
-		d.fileNames.add("bogus_file_name");
+		d.setName("JunitTesting");
+		d.setJsonDocumentType("JunitTesting");
+		d.setJsonNestType(NestType.OBJECT);
+		d.getFileNames().add("bogus_file_name");
 
 		// Missing all
 		try {
@@ -135,14 +135,14 @@ public class DataTableTest {
 		}
 
 		// Missing nestField
-		d.parentIdFields.add("nParentId");
+		d.getDbParentIdFields().add("nParentId");
 		try {
 			d.validate();
 			fail("Object documents should require parentIdFields, nestField");
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.nestField = "Children";
+		d.setJsonNestField("Children");
 		try {
 			d.validate();
 		} catch (IllegalArgumentException e) {
@@ -153,10 +153,10 @@ public class DataTableTest {
 	@Test
 	public void testValidateParent() {
 		DataTable d = new DataTable();
-		d.name = "JunitTesting";
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.PARENT;
-		d.fileNames.add("bogus_file_name");
+		d.setName("JunitTesting");
+		d.setJsonDocumentType("JunitTesting");
+		d.setJsonNestType(NestType.PARENT);
+		d.getFileNames().add("bogus_file_name");
 
 		// try {
 		// d.validate();
@@ -164,7 +164,7 @@ public class DataTableTest {
 		// } catch (IllegalArgumentException e) {
 		// }
 
-		d.idFields.add("nId");
+		d.getDbIdFields().add("nId");
 		try {
 			d.validate();
 		} catch (IllegalArgumentException e) {
@@ -175,10 +175,10 @@ public class DataTableTest {
 	@Test
 	public void testValidateReference() {
 		DataTable d = new DataTable();
-		d.name = "JunitTesting";
-		d.jsonDocumentType = "JunitTesting";
-		d.nestType = NestType.REFERENCE;
-		d.fileNames.add("bogus_file_name");
+		d.setName("JunitTesting");
+		d.setJsonDocumentType("JunitTesting");
+		d.setJsonNestType(NestType.REFERENCE);
+		d.getFileNames().add("bogus_file_name");
 
 		// Missing all three
 		try {
@@ -188,7 +188,7 @@ public class DataTableTest {
 		}
 
 		// Missing parentIdFields, nestField
-		d.idFields.add("nId");
+		d.getDbIdFields().add("nId");
 		try {
 			d.validate();
 			fail("Reference documents should require idFields, parentIdFields, nestField");
@@ -196,14 +196,14 @@ public class DataTableTest {
 		}
 
 		// Missing nestField
-		d.parentIdFields.add("nParentId");
+		d.getDbParentIdFields().add("nParentId");
 		try {
 			d.validate();
 			fail("Reference documents should require idFields, parentIdFields, nestField");
 		} catch (IllegalArgumentException e) {
 		}
 
-		d.nestField = "Children";
+		d.setJsonNestField("Children");
 		try {
 			d.validate();
 		} catch (IllegalArgumentException e) {
