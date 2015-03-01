@@ -25,12 +25,24 @@ public class AppOptions {
     @Parameter(names = { "-?", "--help" }, help = true, description = "Display this help")
     public boolean             help;
 
-    @Parameter(names = { "-traceread" }, description = "Trace reading code", hidden = true)
-    public boolean             traceRead        = false;
+    @Parameter(names = { "-verbose" }, description = "Enable verbose messages to the screen")
+    public boolean             verbose          = false;
 
-    @Parameter(names = { "-tracewrite" }, description = "Trace writing code", hidden = true)
-    public boolean             traceWrite       = false;
+    @Parameter(names = { "-verboseLog" }, description = "Enable verbose messages to the log")
+    public boolean             verboseLog       = false;
 
-    @Parameter(names = { "-log", "-verbose" }, description = "Level of verbosity")
-    public Integer             verbose          = 0;
+    @Parameter(names = { "-debug" }, description = "Enable debug messages to the screen")
+    public boolean             debug            = false;
+
+    @Parameter(names = { "-debugLog" }, description = "Enable debug messages to the  log")
+    public boolean             debugLog         = false;
+
+    @Parameter(names = { "-trace" }, description = "Enable trace messages to the screen", hidden = true)
+    public boolean             trace            = false;
+
+    @Parameter(names = { "-traceLog" }, description = "Enable trace messages to the  log", hidden = true)
+    public boolean             traceLog         = false;
+
+    @Parameter(names = { "-log" }, description = "The log file to use")
+    public String              logFileName;
 }

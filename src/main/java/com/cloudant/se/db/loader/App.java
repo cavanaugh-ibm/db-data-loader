@@ -9,10 +9,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Appender;
+import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -21,10 +24,8 @@ import com.cloudant.client.api.model.ConnectOptions;
 import com.cloudant.se.concurrent.StatusingNotifyingBlockingThreadPoolExecutor;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
-import com.cloudant.se.db.loader.read.BaseDataTableReader;
 import com.cloudant.se.db.loader.read.CsvDataTableReader;
 import com.cloudant.se.db.loader.read.SqlDataTableReader;
-import com.cloudant.se.db.loader.write.BaseDocCallable;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
@@ -75,28 +76,9 @@ public class App {
         }
 
         //
-        // Enable debugging if asked
-        if (options.verbose > 0) {
-            // Logger.getRootLogger().setLevel(Level.DEBUG);
-            if (options.verbose >= 1) {
-                Logger.getLogger("com.cloudant").setLevel(Level.DEBUG);
-            }
-            if (options.verbose >= 2) {
-                Logger.getLogger("org.lightcouch").setLevel(Level.DEBUG);
-            }
-            if (options.verbose >= 3) {
-                Logger.getLogger("org.apache.http").setLevel(Level.DEBUG);
-            }
-        }
-
-        //
-        // Enable tracing if asked
-        if (options.traceRead) {
-            Logger.getLogger(BaseDataTableReader.class.getPackage().getName()).setLevel(Level.TRACE);
-        }
-        if (options.traceWrite) {
-            Logger.getLogger(BaseDocCallable.class.getPackage().getName()).setLevel(Level.TRACE);
-        }
+        // Enable messages as we were asked
+        setScreenLogging();
+        setFileLogging();
 
         //
         // Read the config they gave us
@@ -152,6 +134,61 @@ public class App {
         writerExecutor = new StatusingNotifyingBlockingThreadPoolExecutor(threads, threads * 2, 30, TimeUnit.SECONDS, writeThreadFactory);
 
         return 0;
+    }
+
+    private void setScreenLogging() {
+        Logger logger = Logger.getRootLogger();
+        AppenderSkeleton appender = (AppenderSkeleton) logger.getAppender("stdout");
+
+        if (appender != null) {
+            if (options.trace) {
+                appender.setThreshold(Level.TRACE);
+            } else if (options.debug) {
+                appender.setThreshold(Level.DEBUG);
+            } else if (options.verbose) {
+                appender.setThreshold(Level.INFO);
+            }
+        }
+    }
+
+    private void setFileLogging() {
+        Logger.getRootLogger().removeAppender("file");
+        ;
+
+        String fileName = null;
+        Level newLevel = Level.WARN;
+        boolean addLog = false;
+
+        //
+        // If they give us a log file, log INFO at a minimum
+        if (StringUtils.isNotBlank(options.logFileName)) {
+            fileName = options.logFileName;
+            newLevel = Level.INFO;
+            addLog = true;
+        } else {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+            fileName = "load-" + dateFormat.format(new Date()) + ".log";
+        }
+
+        if (options.traceLog) {
+            newLevel = Level.TRACE;
+            addLog = true;
+        } else if (options.debugLog) {
+            newLevel = Level.DEBUG;
+            addLog = true;
+        } else if (options.verboseLog) {
+            newLevel = Level.INFO;
+            addLog = true;
+        }
+
+        if (addLog) {
+            FileAppender fa = new FileAppender();
+            fa.setFile(fileName);
+            fa.setLayout(new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p [%10.10t] %30.30c{1} - %m%n"));
+            fa.setThreshold(newLevel);
+            fa.activateOptions();
+            Logger.getRootLogger().addAppender(fa);
+        }
     }
 
     private void showUsage(JCommander jCommander) {
