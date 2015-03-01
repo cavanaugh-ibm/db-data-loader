@@ -23,9 +23,6 @@ Once all the required properties are provided in the properties file run `com.cl
 
 ## Open Tasks
 * Migrate in the loader
-* Fix packaging so it brings in the proper logging
-* Add flag to specify the log location
-* Add flag to supress stdout
 * For file loader, add flag to merge or replace
 * For file loader, add in version logic
 * Add logic to read source database password from {prompt/config}
@@ -33,6 +30,9 @@ Once all the required properties are provided in the properties file run `com.cl
 ## Completed Tasks
 * Add logic to read cloudant {password/user/account/database} from {prompt/-D/config}
 * json schema for configuration?
+* Fix packaging so it brings in the proper logging
+* Add flag to supress stdout
+* Add flag to specify the log location
 
 ## License
 
