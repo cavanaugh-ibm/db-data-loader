@@ -23,8 +23,6 @@ Once all the required properties are provided in the properties file run `com.cl
 
 ## Open Tasks
 * Migrate in the loader
-* For file loader, add flag to merge or replace
-* For file loader, add in version logic
 * Add logic to read source database password from {prompt/config}
 
 ## Completed Tasks
