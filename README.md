@@ -4,8 +4,8 @@ db-data-loader
 Data loading utility for Cloudant
 
 * [Tests](#tests)
-* [Open Tasks](#Open-Tasks)
-* [Completed Tasks](#Completed-Tasks)
+* [Open Tasks](#open-tasks)
+* [Completed Tasks](#completed-tasks)
 * [License](#license)
 
 ## Tests
