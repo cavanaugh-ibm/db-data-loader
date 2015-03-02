@@ -5,10 +5,10 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.cloudant.se.Constants.WriteCode;
 import com.cloudant.se.db.exception.StructureException;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
+import com.cloudant.se.db.writer.CloudantWriteResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ParentDocCallable extends BaseDocCallable {
@@ -19,7 +19,7 @@ public class ParentDocCallable extends BaseDocCallable {
     }
 
     @Override
-    public WriteCode handle() throws Exception {
+    public CloudantWriteResult handle() throws Exception {
         //
         // This is the simplest case of all - we try to insert it, if it fails, we update from the database
         //

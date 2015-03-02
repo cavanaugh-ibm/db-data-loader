@@ -21,6 +21,7 @@ import com.cloudant.se.db.loader.AppOptions;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.read.BaseDataTableReader;
+import com.cloudant.se.db.writer.CloudantWriteResult;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -51,8 +52,8 @@ public class BaseDocCallableTest {
 
         callable = new BaseDocCallable(config, table) {
             @Override
-            protected WriteCode handle() throws Exception {
-                return WriteCode.EXCEPTION;
+            protected CloudantWriteResult handle() throws Exception {
+                return CloudantWriteResult.errorResult(WriteCode.EXCEPTION, new RuntimeException("Not Implemented"));
             }
 
             @Override

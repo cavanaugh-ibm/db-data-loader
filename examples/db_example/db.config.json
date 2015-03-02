@@ -1,0 +1,26 @@
+{
+	"cloudantDatabase": "db_importer_test_db",
+	"defaultSqlUrl": "jdbc:hsqldb:file:examples/db_example/dbexample",
+	"defaultSqlDriver": "org.hsqldb.jdbcDriver",
+	"defaultSqlUser": "sa",
+	"defaultSqlPass": "<BLANK>",
+	"tables": [{
+		"name": "Person",
+		"useDatabase": true,
+		"sqlQuery": "select * from Party",
+		"dbIdFields": ["id"],
+		"jsonDocumentType": "Person",
+		"jsonNestType": "PARENT"
+	},
+	{
+		"name": "Phone",
+		"useDatabase": true,
+		"sqlQuery": "select * from Phone",
+		"dbIdFields": ["id"],
+		"dbParentIdFields": ["parent_id"],
+		"jsonDocumentType": "Phone",
+		"jsonUniqueIdField": "PhoneId",
+		"jsonNestField": "Phone",
+		"jsonNestType": "ARRAY"
+	}]
+}

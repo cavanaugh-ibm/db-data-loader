@@ -1,5 +1,7 @@
 package com.cloudant.se.db.loader.write;
 
+import static com.cloudant.se.db.writer.CloudantWriteResult.errorResult;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,7 @@ import com.cloudant.se.db.exception.StructureException;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
 import com.cloudant.se.db.loader.config.DataTableField;
+import com.cloudant.se.db.writer.CloudantWriteResult;
 import com.cloudant.se.db.writer.CloudantWriter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -51,10 +54,10 @@ public abstract class BaseDocCallable extends CloudantWriter {
     }
 
     @Override
-    public final WriteCode call() throws Exception {
+    public final CloudantWriteResult call() throws Exception {
         log.debug(" *** call starting *** ");
 
-        WriteCode wc = null;
+        CloudantWriteResult writeResult = null;
         try {
             //
             // Add in a document type discriminator
@@ -71,24 +74,25 @@ public abstract class BaseDocCallable extends CloudantWriter {
 
             //
             // Give to the implementer to handle
-            wc = handle();
+            writeResult = handle();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            wc = WriteCode.EXCEPTION;
+            writeResult = errorResult(WriteCode.EXCEPTION, e);
         } catch (Exception e) {
             log.error("Error while saving record");
-            wc = WriteCode.EXCEPTION;
+            writeResult = errorResult(WriteCode.EXCEPTION, e);
         }
 
-        switch (wc) {
+        switch (writeResult.getWriteCode()) {
             case UPDATE:
             case INSERT:
-                log.debug(" *** call finished with code \"" + wc + "\"*** ");
+                log.debug(" *** call finished with code \"" + writeResult + "\"*** ");
                 break;
             default:
-                log.error(" *** call finished with code \"" + wc + "\"*** ");
+                log.error(" *** call finished with code \"" + writeResult + "\"*** ");
         }
-        return wc;
+
+        return writeResult;
     }
 
     @SuppressWarnings("unchecked")
@@ -203,7 +207,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
         return keyJoiner.join(idValues);
     }
 
-    protected abstract WriteCode handle() throws Exception;
+    protected abstract CloudantWriteResult handle() throws Exception;
 
     protected void processFields() {
         for (FieldInstance f : data.values()) {
@@ -223,7 +227,7 @@ public abstract class BaseDocCallable extends CloudantWriter {
     protected Map<String, Object> toMap() {
         Map<String, Object> map = Maps.newLinkedHashMap();
         for (FieldInstance f : data.values()) {
-            map.put(f.getField().getDbFieldName(), f.getValue());
+            map.put(f.getField().getJsonFieldName(), f.getValue());
         }
 
         map.put(table.getJsonUniqueIdField(), id);

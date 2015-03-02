@@ -5,10 +5,10 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.cloudant.se.Constants.WriteCode;
 import com.cloudant.se.db.exception.StructureException;
 import com.cloudant.se.db.loader.config.AppConfig;
 import com.cloudant.se.db.loader.config.DataTable;
+import com.cloudant.se.db.writer.CloudantWriteResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 
@@ -21,7 +21,7 @@ public class NestedDocArrayCallable extends BaseDocCallable {
 
     @SuppressWarnings("unchecked")
     @Override
-    public WriteCode handle() {
+    public CloudantWriteResult handle() {
         //
         // This case is a little more complex -
         // - Try inserting into an empty top level document

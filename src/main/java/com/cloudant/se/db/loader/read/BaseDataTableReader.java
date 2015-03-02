@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
 import org.apache.log4j.Logger;
 
 import com.cloudant.se.db.loader.AppConstants.JsonType;
@@ -19,6 +18,7 @@ import com.cloudant.se.db.loader.write.NestedDocCallable;
 import com.cloudant.se.db.loader.write.ParentDocCallable;
 import com.cloudant.se.db.loader.write.ReferenceDocArrayCallable;
 import com.cloudant.se.db.loader.write.ReferenceDocCallable;
+import com.cloudant.se.util.UJson;
 import com.google.common.collect.Maps;
 
 import edu.emory.mathcs.backport.java.util.Collections;
@@ -73,7 +73,7 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 
             //
             // Extra field, nothing to do to it, just keep it
-            DataTableField field = new DataTableField(fieldName, WordUtils.capitalize(fieldName, new char[] { '_' }).replaceAll("_", ""));
+            DataTableField field = new DataTableField(fieldName, UJson.toCamelCase(fieldName));
 
             if (table.isCastNumerics()) {
                 field.setJsonType(JsonType.NUMBER);

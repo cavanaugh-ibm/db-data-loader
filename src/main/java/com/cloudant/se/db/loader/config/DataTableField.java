@@ -18,7 +18,6 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
@@ -27,6 +26,7 @@ import org.springframework.util.Assert;
 import com.cloudant.se.db.loader.AppConstants.JsonType;
 import com.cloudant.se.db.loader.AppConstants.TransformLanguage;
 import com.cloudant.se.db.loader.write.FieldInstance;
+import com.cloudant.se.util.UJson;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.joestelmach.natty.DateGroup;
@@ -71,7 +71,7 @@ public class DataTableField {
     }
 
     public DataTableField(String fieldName) {
-        this(fieldName, fieldName);
+        this(fieldName, UJson.toCamelCase(fieldName));
     }
 
     public DataTableField(String dbFieldName, String jsonFieldName) {
@@ -226,7 +226,7 @@ public class DataTableField {
         //
         // Where its being written to
         if (StringUtils.isBlank(jsonFieldName)) {
-            jsonFieldName = WordUtils.capitalize(dbFieldName, new char[] { '_' }).replaceAll("_", "");
+            jsonFieldName = UJson.toCamelCase(dbFieldName);
         }
         printSetting("jsonFieldName", jsonFieldName);
 

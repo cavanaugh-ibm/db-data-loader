@@ -44,7 +44,12 @@ public class SqlDataTableReader extends BaseDataTableReader {
             while (rs.next()) {
                 int numColumns = rsmd.getColumnCount();
                 for (int i = 1; i <= numColumns; i++) {
-                    addField(rsmd.getColumnName(i), rs.getString(i));
+                    String dbFieldName = rsmd.getColumnName(i);
+                    try {
+                        addField(dbFieldName, rs.getString(i));
+                    } catch (Throwable t) {
+                        log.error("Error processing field - " + dbFieldName, t);
+                    }
                 }
                 recordComplete();
             }
