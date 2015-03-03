@@ -27,6 +27,7 @@ The following can come from either system properties, environment but NOT the co
 ## Open Tasks
 * Migrate in the loader
 * Add logic to read source database password from {prompt/config}
+* Add in end-2-end tests
 
 ## Completed Tasks
 * Add logic to read cloudant {password/user/account/database} from {prompt/-D/config}
