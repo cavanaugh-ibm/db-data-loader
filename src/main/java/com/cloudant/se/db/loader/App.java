@@ -3,14 +3,12 @@ package com.cloudant.se.db.loader;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Appender;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -153,7 +151,6 @@ public class App {
 
     private void setFileLogging() {
         Logger.getRootLogger().removeAppender("file");
-        ;
 
         String fileName = null;
         Level newLevel = Level.WARN;
@@ -256,9 +253,7 @@ public class App {
         return 0;
     }
 
-    public static void main(String[] args)
-    {
-        initLoggers();
+    public static void main(String[] args) {
         App app = new App();
         int configReturnCode = app.config(args);
         switch (configReturnCode) {
@@ -270,27 +265,6 @@ public class App {
                 // config did NOT work, error out
                 System.exit(configReturnCode);
                 break;
-        }
-    }
-
-    private static void initLoggers() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-
-        Logger rootLogger = Logger.getRootLogger();
-        Enumeration<?> appenders = rootLogger.getAllAppenders();
-        FileAppender fa = null;
-        while (appenders.hasMoreElements())
-        {
-            Appender currAppender = (Appender) appenders.nextElement();
-            if (currAppender instanceof FileAppender)
-            {
-                fa = (FileAppender) currAppender;
-            }
-        }
-        if (fa != null)
-        {
-            fa.setFile("load-" + dateFormat.format(new Date()) + ".log");
-            fa.activateOptions();
         }
     }
 }
