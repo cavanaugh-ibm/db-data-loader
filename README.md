@@ -10,6 +10,18 @@ Data loading utility for Cloudant
 
 ## Tests
 
+To run the tests the following properties must be set.
+
+The following can come from either system properties, environment or the default configuration file `src/test/resources/cloudant.properties`
+
+* cloudant_test_account=account
+* cloudant_test_database_prefix=database
+* cloudant_test_user=user
+
+The following can come from either system properties, environment but NOT the configuration file
+
+* cloudant_test_password=password
+
 `mvn test`
 
 ## Open Tasks
