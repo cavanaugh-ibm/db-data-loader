@@ -47,9 +47,7 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 
     public void addField(String fieldName, String fieldValue) {
         fieldName = fieldName.trim();
-        if (fieldValue != null) {
-            fieldValue = fieldValue.trim();
-        }
+        fieldValue = StringUtils.trim(fieldValue);
 
         log.trace(fieldName + " --> " + fieldValue);
 
