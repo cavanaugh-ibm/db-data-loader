@@ -29,14 +29,14 @@ import edu.emory.mathcs.backport.java.util.Collections;
  * @author Cloudant
  */
 public abstract class BaseDataTableReader implements Callable<Integer> {
-    protected static final Logger      log            = Logger.getLogger(BaseDataTableReader.class);
-    private Map<String, FieldInstance> currentRow     = Maps.newTreeMap();
-    protected AppConfig                config         = null;
+    protected static final Logger      log        = Logger.getLogger(BaseDataTableReader.class);
+    private Map<String, FieldInstance> currentRow = Maps.newTreeMap();
+    protected AppConfig                config     = null;
 
-    protected ExecutorService          executor       = null;
-    protected BaseDocCallable          outputCallable = null;
-    protected int                      processed      = 0;
-    protected DataTable                table          = null;
+    protected ExecutorService executor       = null;
+    protected BaseDocCallable outputCallable = null;
+    protected int             processed      = 0;
+    protected DataTable       table          = null;
 
     public BaseDataTableReader(AppConfig config, DataTable table, ExecutorService executor) {
         this.config = config;
@@ -47,7 +47,9 @@ public abstract class BaseDataTableReader implements Callable<Integer> {
 
     public void addField(String fieldName, String fieldValue) {
         fieldName = fieldName.trim();
-        fieldValue = fieldValue.trim();
+        if (fieldValue != null) {
+            fieldValue = fieldValue.trim();
+        }
 
         log.trace(fieldName + " --> " + fieldValue);
 
